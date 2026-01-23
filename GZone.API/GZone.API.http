@@ -1,0 +1,6 @@
+@GZone.API_HostAddress = http://localhost:5294
+
+GET {{GZone.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
