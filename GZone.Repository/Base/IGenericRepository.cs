@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace GZone.Repository.Interfaces
+namespace GZone.Repository.Base
 {
     public interface IGenericRepository<T> where T : class
     {
@@ -17,6 +17,12 @@ namespace GZone.Repository.Interfaces
             Func<IQueryable<T>, IQueryable<T>>? include = null,
             bool useSplitQuery = true,
             bool hasTrackings = true);
+        Task<IEnumerable<T>> GetPagedAsync(
+            int pageNumber,
+            int pageSize,
+            Expression<Func<T, bool>>? predicate = null,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+            Func<IQueryable<T>, IQueryable<T>>? include = null);
 
         Task<T?> GetOneAsync(
             Expression<Func<T, bool>> expression,

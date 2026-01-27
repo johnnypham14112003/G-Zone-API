@@ -1,9 +1,10 @@
 ﻿using GZone.Repository.Interfaces;
+using GZone.Repository.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Data;
 
-namespace GZone.Repository.Repositories
+namespace GZone.Repository.Base
 {
     public class UnitOfWork : IUnitOfWork
     {

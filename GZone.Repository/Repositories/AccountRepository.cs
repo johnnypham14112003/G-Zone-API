@@ -1,4 +1,5 @@
-﻿using GZone.Repository.Interfaces;
+﻿using GZone.Repository.Base;
+using GZone.Repository.Interfaces;
 using GZone.Repository.Models;
 
 namespace GZone.Repository.Repositories

@@ -1,8 +1,7 @@
-﻿using GZone.Repository.Interfaces;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace GZone.Repository.Repositories
+namespace GZone.Repository.Base
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
@@ -78,6 +77,35 @@ namespace GZone.Repository.Repositories
             if (!hasTrackings) query = query.AsNoTracking();
 
             return await query.ToListAsync();
+        }
+
+        public async Task<IEnumerable<T>> GetPagedAsync(
+            int pageNumber,
+            int pageSize,
+            Expression<Func<T, bool>>? predicate = null,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+            Func<IQueryable<T>, IQueryable<T>>? include = null)
+        {
+            IQueryable<T> query = _context.Set<T>();
+            if (include != null)
+            {
+                query = include(query);
+            }
+            if (pageNumber == 0) pageNumber = 1;
+            if (pageSize == 0) pageSize = 10;
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+
+            if (orderBy != null)
+            {
+                query = orderBy(query);
+            }
+            return await query.Skip((pageNumber - 1) * pageSize)
+                              .Take(pageSize)
+                              .AsNoTracking()
+                              .ToListAsync();
         }
 
         public async Task<T?> GetOneAsync(

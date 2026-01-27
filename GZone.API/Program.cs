@@ -2,12 +2,12 @@ using GZone.API;
 using GZone.API.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
-var config = builder.Configuration;
-var env = builder.Environment;
-var configBuild = builder.Configuration;
+
+// Using package DotNetEnv to load .env file (must be first priority at here)
+DotNetEnv.Env.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 
 // Add services to the container.
-builder.Services.RegisterServices(config, env, configBuild);
+builder.Services.RegisterServices(config);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

@@ -1,6 +1,7 @@
-﻿using System.Data;
+﻿using GZone.Repository.Interfaces;
+using System.Data;
 
-namespace GZone.Repository.Interfaces
+namespace GZone.Repository.Base
 {
     public interface IUnitOfWork : IDisposable
     {

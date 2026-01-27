@@ -1,4 +1,4 @@
-﻿using GZone.Repository.Interfaces;
+﻿using GZone.Repository.Base;
 using GZone.Repository.Models;
 using GZone.Service.Extensions.Exceptions;
 using GZone.Service.Extensions.Utils;

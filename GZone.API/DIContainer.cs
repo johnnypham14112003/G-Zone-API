@@ -1,4 +1,5 @@
 ﻿using GZone.Repository;
+using GZone.Repository.Base;
 using GZone.Repository.Interfaces;
 using GZone.Repository.Repositories;
 using GZone.Service.Extensions;
@@ -13,7 +14,7 @@ namespace GZone.API
 {
     public static class DIContainer
     {
-        public static IServiceCollection RegisterServices(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment env, IConfigurationBuilder configBuild)
+        public static IServiceCollection RegisterServices(this IServiceCollection services, IConfiguration configuration)
         {
             //System Services
             services.InjectDbContext(configuration);
@@ -34,10 +35,9 @@ namespace GZone.API
         //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         private static IServiceCollection InjectDbContext(this IServiceCollection services, IConfiguration configuration)
         {
-            var connectionString = configuration["ProdConnection"];
+            var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
 
-            services.AddDbContext<GZoneDbContext>(options =>
-                options.UseSqlServer(connectionString));
+            services.AddDbContext<GZoneDbContext>(options => options.UseSqlServer(connectionString));
 
             return services;
         }

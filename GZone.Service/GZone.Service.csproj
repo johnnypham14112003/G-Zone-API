@@ -17,8 +17,4 @@
     <ProjectReference Include="..\GZone.Repository\GZone.Repository.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="BusinessModels\" />
-  </ItemGroup>
-
 </Project>
