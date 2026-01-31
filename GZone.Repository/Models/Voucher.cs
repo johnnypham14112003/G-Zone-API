@@ -12,7 +12,7 @@ namespace GZone.Repository.Models
         public string DiscountType { get; set; }
         public decimal DiscountValue { get; set; }
         public decimal MaxDiscountAmount { get; set; }
-        public decimal MinOrderAmount { get; set; }
+        public int MinOrderAmount { get; set; }
         public int MaxUsageTotal { get; set; }
         public int MaxUsagePerCustomer { get; set; }
         public int CurrentUsageCount { get; set; }
