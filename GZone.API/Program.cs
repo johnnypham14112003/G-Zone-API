@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 DotNetEnv.Env.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 
 // Add services to the container.
-builder.Services.RegisterServices(config);
+builder.Services.RegisterServices(builder.Configuration);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
