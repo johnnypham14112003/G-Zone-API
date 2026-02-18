@@ -1,4 +1,5 @@
-﻿using GZone.Service.Extensions.Exceptions;
+﻿using GZone.Service.BusinessModels.Generic;
+using GZone.Service.Extensions.Exceptions;
 using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
@@ -39,38 +40,49 @@ namespace GZone.API.Middlewares
         private Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
             context.Response.ContentType = "application/json";
-            var errorDetails = new ErrorDetails
+
+            // Mặc định là lỗi 500 Internal Server Error
+            int statusCode = (int)HttpStatusCode.InternalServerError;
+            //string message = "Internal Server Error";
+            string message = ex.Message;    //Suggest using for development environment only
+
+            // Mapping Exception sang StatusCode
+            switch (ex)
             {
-                ErrorType = ErrorType.InternalServerError.ToString(),
-                ErrorMessage = ex.Message,
-                StackTrace = ex.StackTrace
-            };
+                case BadRequestException badRequestEx:
+                    statusCode = (int)HttpStatusCode.BadRequest;
+                    message = badRequestEx.Message; // Lấy message từ Service throw ra
+                    break;
 
-            errorDetails = ex switch
-            {
-                NotFoundException => errorDetails with { ErrorType = ErrorType.NotFound.ToString(), StatusCode = (int)HttpStatusCode.NotFound },
-                BadRequestException => errorDetails with { ErrorType = ErrorType.BadRequest.ToString(), StatusCode = (int)HttpStatusCode.BadRequest },
-                UnauthorizedException => errorDetails with { ErrorType = ErrorType.Unauthorized.ToString(), StatusCode = (int)HttpStatusCode.Unauthorized },
-                ConflictException => errorDetails with { ErrorType = ErrorType.Conflict.ToString(), StatusCode = (int)HttpStatusCode.Conflict },
-                _ => errorDetails
-            };
+                case NotFoundException notFoundEx:
+                    statusCode = (int)HttpStatusCode.NotFound;
+                    message = notFoundEx.Message;
+                    break;
 
-            var response = JsonConvert.SerializeObject(errorDetails);
-            context.Response.StatusCode = errorDetails.StatusCode;
+                case UnauthorizedException:
+                    statusCode = (int)HttpStatusCode.Unauthorized;
+                    message = "Unauthorized";
+                    break;
 
-            return context.Response.WriteAsync(response);
-        }
+                case ConflictException conflictEx:
+                    statusCode = (int)HttpStatusCode.Conflict;
+                    message = conflictEx.Message;
+                    break;
 
-        internal record ErrorDetails
-        {
-            public int StatusCode { get; set; } = (int)HttpStatusCode.InternalServerError;
+                // Xử lý mặc định cho Exception thường nhưng muốn hiện message
+                default:
+                    message = ex.Message;
+                    break;
+            }
 
-            [EnumDataType(typeof(ErrorType))]
-            public required string ErrorType { get; set; }
+            var responseModel = ApiResponse<object>.Failure(message, statusCode);
 
-            public required string ErrorMessage { get; set; }
+            context.Response.StatusCode = statusCode;
 
-            public string? StackTrace { get; set; }
+            // Serialize ApiResponse thành JSON
+            var jsonResponse = JsonConvert.SerializeObject(responseModel);
+
+            return context.Response.WriteAsync(jsonResponse);
         }
     }
 }

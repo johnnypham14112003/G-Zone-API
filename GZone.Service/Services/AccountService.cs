@@ -1,49 +1,237 @@
 ﻿using GZone.Repository.Base;
 using GZone.Repository.Models;
+using GZone.Service.BusinessModels.Generic;
+using GZone.Service.BusinessModels.Request;
+using GZone.Service.BusinessModels.Response;
 using GZone.Service.Extensions.Exceptions;
 using GZone.Service.Extensions.Utils;
 using GZone.Service.Interfaces;
-using System.Diagnostics;
+using Mapster;
+using Microsoft.IdentityModel.Tokens;
+using System.Linq.Expressions;
+using System.Security.Claims;
 
 namespace GZone.Service.Services
 {
     public class AccountService : IAccountService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ITokenService _tokenService;
 
-        public AccountService(IUnitOfWork unitOfWork)
+        public AccountService(IUnitOfWork unitOfWork, ITokenService tokenService)
         {
             _unitOfWork = unitOfWork;
+            _tokenService = tokenService;
         }
 
-        public async Task<Account> LoginWithEmailPasswordAsync(string email, string password)
+        public async Task<ApiResponse<AuthResponse>> LoginByPasswordAsync(AuthRequest authRequest)
         {
-            try
+            if (BoolUtils.IsValidEmail(authRequest.Email) == false)
+                throw new BadRequestException("Invalid Email Format!");
+
+            // Check account in database
+            var existAccount = await _unitOfWork.GetAccountRepository().GetOneAsync(
+                acc => acc.Email.ToLower().Equals(authRequest.Email.ToLower()));
+
+            if (existAccount is null)
+                throw new NotFoundException("Not Found Account match email!");
+
+            //Hash Password
+            var securedPassword = StringUtils.HashStringSHA256(authRequest.Password);
+
+            // If password not match
+            if (!securedPassword.Equals(existAccount.PasswordHash))
+                throw new BadRequestException("Wrong Password!");
+
+            //Generate Tokens
+            var accessToken = _tokenService.GenerateAccessToken(existAccount);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+            var expireTimes = _tokenService.GetExpirationTimes();
+
+            // Lưu refresh token vào database
+            existAccount.RefreshToken = refreshToken;
+            existAccount.RefreshTokenExpiryTime = DateTime.Now.AddDays(expireTimes.refreshDay);
+
+            await _unitOfWork.CompleteAsync();
+            var authResponse = new AuthResponse
             {
-                if (BoolUtils.IsEmptyString(email, password))
-                    throw new BadRequestException("Email and password are required.");
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                ExpiresIn = expireTimes.accessMinute * 60,//convert to seconds
+                Email = existAccount.Email,
+                UserName = existAccount.Username,
+                Role = existAccount.Role,
+                Avatar = existAccount.AvatarUrl
+            };
+            return ApiResponse<AuthResponse>.Success(authResponse);
+        }
 
-                //var account = await _unitOfWork.GetAccountRepository()
-                //    .GetOneAsync(a => a.Email == email, hasTrackings: false);
+        public async Task<ApiResponse<AuthResponse>> RefreshTokenAsync(AuthTokenRequest request)
+        {
+            //Decode token to get accountId
+            var principal = _tokenService.GetPrincipalFromExpiredToken(request.AccessToken);
+            var accountId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
 
-                //if (account == null)
-                //    throw new UnauthorizedAccessException("Invalid email or password.");
+            // Get accountId from token
+            if (accountId == null || accountId.Equals(Guid.Empty.ToString()))
+                throw new UnauthorizedException("Invalid Account ID");
 
-                //if (account.Status.ToLower() == "deleted")
-                //    throw new UnauthorizedException("This account has been deleted. Please contact support for assistance.");
-
-                //string hashedInput = HashStringSHA256(password);
-                //if (!string.Equals(account.Password, hashedInput, StringComparison.OrdinalIgnoreCase))
-                //    throw new UnauthorizedAccessException("Invalid email or password.");
-
-                //return account;
-                return null;
-            }
-            catch (Exception ex)
+            // Get account from accountId
+            var existAccount = await _unitOfWork.GetAccountRepository().GetByIdAsync(Guid.Parse(accountId));
+            if (existAccount == null ||
+                existAccount.RefreshToken != request.RefreshToken ||
+                existAccount.RefreshTokenExpiryTime <= DateTime.Now)
             {
-                Debug.WriteLine($"Exception in method LoginWithEmailPasswordAsync in AccountService: {ex.Message}");
-                throw;
+                throw new SecurityTokenException("Invalid refresh token");
             }
+
+            var newAccessToken = _tokenService.GenerateAccessToken(existAccount);
+            var newRefreshToken = _tokenService.GenerateRefreshToken();
+            var expireTimes = _tokenService.GetExpirationTimes();
+
+            existAccount.RefreshToken = newRefreshToken;
+            existAccount.RefreshTokenExpiryTime = DateTime.Now.AddDays(expireTimes.refreshDay);
+
+            await _unitOfWork.CompleteAsync();
+
+            var authResponse = new AuthResponse
+            {
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken,
+                ExpiresIn = expireTimes.accessMinute * 60,//convert to seconds
+                Email = existAccount.Email,
+                UserName = existAccount.Username,
+                Role = existAccount.Role,
+            };
+            return ApiResponse<AuthResponse>.Success(authResponse);
+        }
+
+        public async Task RevokeRefreshTokenAsync(Guid accountId)
+        {
+            var account = await _unitOfWork.GetAccountRepository().GetByIdAsync(accountId);
+            if (account != null)
+            {
+                account.RefreshToken = null;
+                account.RefreshTokenExpiryTime = null;
+                await _unitOfWork.CompleteAsync();
+            }
+        }
+
+        //=================================================================================================
+        public async Task<ApiResponse<Account>> GetAccountProfileAsync(Guid accountId)
+        {
+            var account = await _unitOfWork.GetAccountRepository().GetByIdAsync(accountId);
+
+            if (account == null)
+                throw new NotFoundException("Không tìm thấy thông tin tài khoản.");
+
+            return ApiResponse<Account>.Success(account);
+        }
+
+        public async Task<ApiResponse<Account>> CreateAccountAsync(RegisterRequest request)
+        {
+            // 1. Validate Email format
+            if (!BoolUtils.IsValidEmail(request.Email))
+            {
+                throw new BadRequestException("Invalid email!");
+            }
+
+            // 2. Check Duplicate Email
+            var isEmailExist = await _unitOfWork.GetAccountRepository().AnyAsync(x => x.Email == request.Email);
+            if (isEmailExist)
+            {
+                // 409 Conflict: Tài nguyên đã tồn tại
+                throw new ConflictException("Email already signed-up.");
+            }
+
+            // 3. Check Duplicate Username (Optional)
+            var isUserExist = await _unitOfWork.GetAccountRepository().AnyAsync(x => x.Username == request.UserName);
+            if (isUserExist)
+            {
+                throw new ConflictException("This Username already existed!");
+            }
+
+            // 4. Create Entity
+            var newAccount = new Account
+            {
+                Id = Guid.NewGuid(),
+                Email = request.Email,
+                Username = request.UserName, // Giả sử model DB là Name
+                PasswordHash = StringUtils.HashStringSHA256(request.Password),
+                AvatarUrl = request.Avatar,
+                CreatedAt = DateTime.Now,
+                IsActive = true, // Mặc định kích hoạt
+                Role = "Customer",
+                Status = "Active"
+            };
+
+            // 5. Save to DB
+            await _unitOfWork.GetAccountRepository().AddAsync(newAccount);
+            await _unitOfWork.CompleteAsync();
+
+            return ApiResponse<Account>.Success(newAccount, "Tạo tài khoản thành công.");
+        }
+
+        public async Task<ApiResponse<bool>> UpdateAccountAsync(AccountRequest request)
+        {
+            // 1. Check exist Account
+            var account = await _unitOfWork.GetAccountRepository().GetByIdAsync(request.Id);
+            if (account is null)
+            {
+                throw new NotFoundException("Tài khoản không tồn tại.");
+            }
+
+            // 2. Validate Duplicate Email (nếu đổi email)
+            // Logic: Nếu email thay đổi VÀ email mới đã thuộc về người khác
+            if (!account.Email.Equals(request.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                if (!BoolUtils.IsValidEmail(request.Email))
+                    throw new BadRequestException("Email không hợp lệ.");
+
+                var isEmailTaken = await _unitOfWork.GetAccountRepository()
+                    .AnyAsync(x => x.Email == request.Email && x.Id != request.Id);
+
+                if (isEmailTaken)
+                {
+                    throw new ConflictException("Email mới đã được sử dụng bởi tài khoản khác.");
+                }
+            }
+
+            // 3. Update fields
+            var tempPassword = account.PasswordHash;
+            request.Adapt(account);
+
+            account.PasswordHash = tempPassword; // Retain existing password
+
+            // 4. Save
+            await _unitOfWork.CompleteAsync();
+
+            return ApiResponse<bool>.Success(true, "Cập nhật thông tin thành công.");
+        }
+
+        public async Task<ApiResponse<bool>> DeleteAccountAsync(Guid accountId)
+        {
+            // 1. Check exist
+            var account = await _unitOfWork.GetAccountRepository().GetByIdAsync(accountId);
+            if (account is null)
+            {
+                throw new NotFoundException("Not found any account match the Id!");
+            }
+
+            // 2. Perform Delete
+            // Cách 1: Hard Delete (Xóa vĩnh viễn khỏi DB)
+            // _unitOfWork.AccountRepository.Remove(account);
+
+            // Cách 2: Soft Delete (Đánh dấu đã xóa)
+            // Giả sử Entity Account có field IsDeleted
+            // account.IsDeleted = true;
+            // _unitOfWork.AccountRepository.Update(account);
+
+            await _unitOfWork.GetAccountRepository().DeleteAsync(account);
+
+            await _unitOfWork.CompleteAsync();
+
+            return ApiResponse<bool>.Success(true, "Xóa tài khoản thành công.");
         }
     }
 }

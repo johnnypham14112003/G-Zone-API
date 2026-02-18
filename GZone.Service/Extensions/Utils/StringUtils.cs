@@ -19,5 +19,24 @@ namespace GZone.Service.Extensions.Utils
             }
             return builder.ToString();
         }
+
+        /// <summary>
+        /// Extract username from email.
+        /// </summary>
+        public static string GetUsername(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return string.Empty;
+
+            // Tìm vị trí của ký tự @
+            int atIndex = email.IndexOf('@');
+
+            // Nếu không tìm thấy @ hoặc @ ở đầu chuỗi, trả về giá trị phù hợp
+            if (atIndex <= 0)
+                return string.Empty;
+
+            // Sử dụng Span để thao tác trên bộ nhớ mà không tạo chuỗi tạm
+            return email.AsSpan(0, atIndex).ToString();
+        }
     }
 }

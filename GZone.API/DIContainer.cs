@@ -1,4 +1,5 @@
-﻿using GZone.Repository;
+﻿using Asp.Versioning;
+using GZone.Repository;
 using GZone.Repository.Base;
 using GZone.Repository.Interfaces;
 using GZone.Repository.Repositories;
@@ -30,6 +31,7 @@ namespace GZone.API
             services.ConfigCORS();
             services.ConfigKebabCase();
             services.ConfigJsonLoopDeserielize();
+            services.ConfigVersioning();
             services.ConfigSwagger();
 
             //Third Party Services
@@ -53,6 +55,8 @@ namespace GZone.API
         private static IServiceCollection InjectBusinessServices(this IServiceCollection services)
         {
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IImageService, ImageService>();
 
             //Add other BusinessServices here...
 
@@ -117,6 +121,37 @@ namespace GZone.API
             return services;
         }
 
+        private static IServiceCollection ConfigVersioning(this IServiceCollection services)
+        {
+            services.AddApiVersioning(options =>
+            {
+                // 1. Trả về các version được hỗ trợ trong response header (api-supported-versions)
+                options.ReportApiVersions = true;
+
+                // 2. Nếu client không gửi version, mặc định sẽ dùng version này
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.DefaultApiVersion = new ApiVersion(1, 0);
+
+                // 3. Đọc version từ đâu? (Mặc định là Query String ?api-version=1.0)
+                // Cấu hình bên dưới cho phép đọc từ cả Query String VÀ Header
+                //options.ApiVersionReader = ApiVersionReader.Combine(
+                //    new QueryStringApiVersionReader("api-version"),
+                //    new HeaderApiVersionReader("X-Version")
+                //);
+            })
+            .AddApiExplorer(options =>
+            {
+                // Định dạng tên version cho Group (ví dụ: 'v'1, 'v'2)
+                options.GroupNameFormat = "'v'VVV";
+
+                // QUAN TRỌNG NHẤT: Thay thế {version} trong URL bằng giá trị thực tế
+                // Ví dụ: api/v{version}/accounts -> api/v1/accounts
+                // Việc này giúp Swagger phân biệt được 2 đường dẫn khác nhau -> Hết lỗi Conflict
+                options.SubstituteApiVersionInUrl = true;
+            });
+            return services;
+        }
+
         public static IServiceCollection ConfigSwagger(this IServiceCollection services)
         {
             // Swagger Bearer auth
@@ -124,9 +159,20 @@ namespace GZone.API
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
-                    Title = "GZone API",
-                    Version = "v1",
-                    Description = "API for managing GZone WebApp",
+                    Title = "GZone API V1",
+                    Version = "v1"
+                });
+
+                // Tạo doc cho V2
+                c.SwaggerDoc("v2", new OpenApiInfo
+                {
+                    Title = "GZone API V2",
+                    Version = "v2"
+                });
+
+                c.DocInclusionPredicate((docName, apiDesc) =>
+                {
+                    return apiDesc.GroupName == docName;
                 });
 
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -164,11 +210,11 @@ namespace GZone.API
             var jwtOps = new JwtSettings
             {
                 // Priority: appsettings.json > Environment Variables
-                Key = configuration["Jwt_Key"] ?? Environment.GetEnvironmentVariable("Jwt_Key") ?? string.Empty,
-                Issuer = configuration["Jwt_Issuer"] ?? Environment.GetEnvironmentVariable("Jwt_Issuer") ?? string.Empty,
-                Audience = configuration["Jwt_Audience"] ?? Environment.GetEnvironmentVariable("Jwt_Audience") ?? string.Empty,
-                AccessTokenExpirationMinutes = int.TryParse(configuration["Jwt_AccessTokenExpirationMinutes"] ?? Environment.GetEnvironmentVariable("Jwt_AccessTokenExpirationMinutes"), out var m) ? m : 15,
-                RefreshTokenExpirationDays = int.TryParse(configuration["Jwt_RefreshTokenExpirationDays"] ?? Environment.GetEnvironmentVariable("Jwt_RefreshTokenExpirationDays"), out var d) ? d : 7
+                Key = Environment.GetEnvironmentVariable("Jwt_Key") ?? string.Empty,
+                Issuer = Environment.GetEnvironmentVariable("Jwt_Issuer") ?? string.Empty,
+                Audience = Environment.GetEnvironmentVariable("Jwt_Audience") ?? string.Empty,
+                AccessTokenExpirationMinutes = int.TryParse(Environment.GetEnvironmentVariable("Jwt_AccessTokenExpirationMinutes"), out var m) ? m : 15,
+                RefreshTokenExpirationDays = int.TryParse(Environment.GetEnvironmentVariable("Jwt_RefreshTokenExpirationDays"), out var d) ? d : 7
             };
 
             // Register JwtSettings as a singleton
@@ -180,32 +226,32 @@ namespace GZone.API
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             })
-        .AddJwtBearer(options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
+            .AddJwtBearer(options =>
             {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = jwtOps.Issuer,
-                ValidAudience = jwtOps.Audience,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOps.Key)),
-                ClockSkew = TimeSpan.Zero
-            };
-
-            options.Events = new JwtBearerEvents
-            {
-                OnAuthenticationFailed = context =>
+                options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtOps.Issuer,
+                    ValidAudience = jwtOps.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOps.Key)),
+                    ClockSkew = TimeSpan.Zero
+                };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
                     {
-                        context.Response.Headers["Token-Expired"] = "true";
+                        if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+                        {
+                            context.Response.Headers["Token-Expired"] = "true";
+                        }
+                        return Task.CompletedTask;
                     }
-                    return Task.CompletedTask;
-                }
-            };
-        });
+                };
+            });
             return services;
         }
     }
