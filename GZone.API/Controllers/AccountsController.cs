@@ -62,6 +62,19 @@ public class AccountsController : Controller
         return StatusCode(result.StatusCode, result);
     }
 
+    /*
+    [Authorize]
+    [HttpGet("list")]
+    public async Task<IActionResult> GetListAccount(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? search = null)
+    {
+        var result = await _service.GetAccountsListAsync(pageNumber, pageSize, search);
+        return StatusCode(result.StatusCode, result);
+    }
+     */
+
     // Helper method để lấy ID từ Token
     private Guid GetCurrentUserId()
     {

@@ -3,7 +3,7 @@
     public class ApiResponse<T>
     {
         public int StatusCode { get; set; }
-        public string Message { get; set; }
+        public string Message { get; set; } = null!;
         public T? Data { get; set; } // Dữ liệu trả về (Token, UserInfo, v.v.)
 
         // Các hàm helper để tạo response nhanh (Optional)

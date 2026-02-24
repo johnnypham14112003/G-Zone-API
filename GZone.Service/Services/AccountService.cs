@@ -123,10 +123,58 @@ namespace GZone.Service.Services
             var account = await _unitOfWork.GetAccountRepository().GetByIdAsync(accountId);
 
             if (account == null)
-                throw new NotFoundException("Không tìm thấy thông tin tài khoản.");
+                throw new NotFoundException("Not found any account match the Id!");
 
             return ApiResponse<Account>.Success(account);
         }
+
+        /*
+        public async Task<ApiResponse<PagedResponse<AccountResponse>>> GetAccountsListAsync(int pageIndex, int pageSize, modelClass? query)
+        {
+            if (pageIndex <= 0) pageIndex = 1;
+            if (pageSize <= 0) pageSize = 10;
+
+            Expression<Func<Account, bool>>? predicate = null;
+
+            if (!string.IsNullOrWhiteSpace(query.column))
+            {
+                predicate = q => q.Code.ToLower().Contains(query.column.ToLower()) ||
+                                q.Email.ToLower().Contains(query.column.ToLower()) ||
+                                q.Name.ToLower().Contains(query.column.ToLower()) ||
+                                q.PhoneNumber!.Contains(query.column);
+            }
+        // Nếu muốn thêm filter theo Role, Status,... thì có thể mở rộng thêm vào predicate ở đây
+        if (!string.IsNullOrEmpty(query.column))
+        {
+        --- And này là hàm ở trong ExpressionExtensions.cs (Services/Extensions/ExpressionExtensions.cs) ---
+            predicate = predicate.And(c => c.Type.Contains(query.column));
+        }
+
+        if (!string.IsNullOrEmpty(query.column))
+        {
+            predicate = predicate.And(c => c.Name.Contains(query.column));
+        }
+        //==============================================================================================
+
+            Func<IQueryable<Account>, IOrderedQueryable<Account>> orderBy =
+                q => q.OrderByDescending(x => x.CreatedAt);
+
+            var accounts = await _unitOfWork.AccountRepository.GetPagedAsync(
+                pageIndex, pageSize, predicate, orderBy);
+
+            var totalCount = await _unitOfWork.AccountRepository.CountAsync();
+
+            var response = accounts.Adapt<List<AccountResponse>>();
+            var pagedResponse = new PagedResponse<AccountResponse>
+            {
+                DataList = response,
+                TotalCount = totalCount,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+
+            return ApiResponse<PagedResponse<AccountResponse>>.Success(account);
+        }*/
 
         public async Task<ApiResponse<Account>> CreateAccountAsync(RegisterRequest request)
         {
@@ -169,7 +217,7 @@ namespace GZone.Service.Services
             await _unitOfWork.GetAccountRepository().AddAsync(newAccount);
             await _unitOfWork.CompleteAsync();
 
-            return ApiResponse<Account>.Success(newAccount, "Tạo tài khoản thành công.");
+            return ApiResponse<Account>.Success(newAccount, "Create account successfully!");
         }
 
         public async Task<ApiResponse<bool>> UpdateAccountAsync(AccountRequest request)
@@ -178,7 +226,7 @@ namespace GZone.Service.Services
             var account = await _unitOfWork.GetAccountRepository().GetByIdAsync(request.Id);
             if (account is null)
             {
-                throw new NotFoundException("Tài khoản không tồn tại.");
+                throw new NotFoundException("Not found any account match the Id!");
             }
 
             // 2. Validate Duplicate Email (nếu đổi email)
@@ -186,14 +234,14 @@ namespace GZone.Service.Services
             if (!account.Email.Equals(request.Email, StringComparison.OrdinalIgnoreCase))
             {
                 if (!BoolUtils.IsValidEmail(request.Email))
-                    throw new BadRequestException("Email không hợp lệ.");
+                    throw new BadRequestException("Invalid email!");
 
                 var isEmailTaken = await _unitOfWork.GetAccountRepository()
                     .AnyAsync(x => x.Email == request.Email && x.Id != request.Id);
 
                 if (isEmailTaken)
                 {
-                    throw new ConflictException("Email mới đã được sử dụng bởi tài khoản khác.");
+                    throw new ConflictException("This Email has been used by other!");
                 }
             }
 
@@ -206,7 +254,7 @@ namespace GZone.Service.Services
             // 4. Save
             await _unitOfWork.CompleteAsync();
 
-            return ApiResponse<bool>.Success(true, "Cập nhật thông tin thành công.");
+            return ApiResponse<bool>.Success(true, "Update successfully!");
         }
 
         public async Task<ApiResponse<bool>> DeleteAccountAsync(Guid accountId)
@@ -231,7 +279,7 @@ namespace GZone.Service.Services
 
             await _unitOfWork.CompleteAsync();
 
-            return ApiResponse<bool>.Success(true, "Xóa tài khoản thành công.");
+            return ApiResponse<bool>.Success(true, "Delete Successfully!");
         }
     }
 }

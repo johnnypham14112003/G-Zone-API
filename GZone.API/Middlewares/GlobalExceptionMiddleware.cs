@@ -1,7 +1,6 @@
 ﻿using GZone.Service.BusinessModels.Generic;
 using GZone.Service.Extensions.Exceptions;
 using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations;
 using System.Net;
 
 namespace GZone.API.Middlewares
@@ -29,6 +28,11 @@ namespace GZone.API.Middlewares
             try
             {
                 await _next(context);
+
+                if (IsAuthError(context.Response.StatusCode) && !context.Response.HasStarted)
+                {
+                    await HandleAuthErrorAsync(context);
+                }
             }
             catch (Exception ex)
             {
@@ -37,14 +41,42 @@ namespace GZone.API.Middlewares
             }
         }
 
-        private Task HandleExceptionAsync(HttpContext context, Exception ex)
+        private static bool IsAuthError(int statusCode)
         {
+            return statusCode == StatusCodes.Status401Unauthorized ||
+                   statusCode == StatusCodes.Status403Forbidden;
+        }
+
+        private async Task HandleAuthErrorAsync(HttpContext context)
+        {
+            context.Response.ContentType = "application/json";
+
+            string message = "You don't have permission";
+            if (context.Response.StatusCode == StatusCodes.Status401Unauthorized)
+            {
+                message = "Please check again your authorize token (Unauthorized).";
+            }
+            else if (context.Response.StatusCode == StatusCodes.Status403Forbidden)
+            {
+                message = "You don't have permission to do this action (Forbidden).";
+            }
+
+            var responseModel = ApiResponse<object>.Failure(message, context.Response.StatusCode);
+            var jsonResponse = JsonConvert.SerializeObject(responseModel);
+
+            await context.Response.WriteAsync(jsonResponse);
+        }
+
+        private async Task HandleExceptionAsync(HttpContext context, Exception ex)
+        {
+            // Nếu response đã bắt đầu gửi thì không thể ghi đè
+            //if (context.Response.HasStarted) return;
+
             context.Response.ContentType = "application/json";
 
             // Mặc định là lỗi 500 Internal Server Error
             int statusCode = (int)HttpStatusCode.InternalServerError;
-            //string message = "Internal Server Error";
-            string message = ex.Message;    //Suggest using for development environment only
+            string message = "Internal Server Error";
 
             // Mapping Exception sang StatusCode
             switch (ex)
@@ -59,9 +91,9 @@ namespace GZone.API.Middlewares
                     message = notFoundEx.Message;
                     break;
 
-                case UnauthorizedException:
+                case UnauthorizedException unAuthorizeEx:
                     statusCode = (int)HttpStatusCode.Unauthorized;
-                    message = "Unauthorized";
+                    message = unAuthorizeEx.Message;
                     break;
 
                 case ConflictException conflictEx:
@@ -75,14 +107,13 @@ namespace GZone.API.Middlewares
                     break;
             }
 
-            var responseModel = ApiResponse<object>.Failure(message, statusCode);
-
             context.Response.StatusCode = statusCode;
 
             // Serialize ApiResponse thành JSON
+            var responseModel = ApiResponse<object>.Failure(message, statusCode);
             var jsonResponse = JsonConvert.SerializeObject(responseModel);
 
-            return context.Response.WriteAsync(jsonResponse);
+            await context.Response.WriteAsync(jsonResponse);
         }
     }
 }
