@@ -2,6 +2,7 @@
 using GZone.Repository.Models;
 using GZone.Service.BusinessModels.Generic;
 using GZone.Service.BusinessModels.Request;
+using GZone.Service.BusinessModels.Request.Account;
 using GZone.Service.BusinessModels.Response;
 using GZone.Service.Extensions.Exceptions;
 using GZone.Service.Extensions.Utils;
@@ -128,41 +129,47 @@ namespace GZone.Service.Services
             return ApiResponse<Account>.Success(account);
         }
 
-        /*
-        public async Task<ApiResponse<PagedResponse<AccountResponse>>> GetAccountsListAsync(int pageIndex, int pageSize, modelClass? query)
+        public async Task<ApiResponse<PagedResponse<AccountResponse>>> GetAccountsListAsync(int pageIndex, int pageSize, AccountQuery? query)
         {
             if (pageIndex <= 0) pageIndex = 1;
             if (pageSize <= 0) pageSize = 10;
 
-            Expression<Func<Account, bool>>? predicate = null;
+            // 2. Khởi tạo Query mặc định nếu null
+            query ??= new AccountQuery();
 
-            if (!string.IsNullOrWhiteSpace(query.column))
-            {
-                predicate = q => q.Code.ToLower().Contains(query.column.ToLower()) ||
-                                q.Email.ToLower().Contains(query.column.ToLower()) ||
-                                q.Name.ToLower().Contains(query.column.ToLower()) ||
-                                q.PhoneNumber!.Contains(query.column);
-            }
-        // Nếu muốn thêm filter theo Role, Status,... thì có thể mở rộng thêm vào predicate ở đây
-        if (!string.IsNullOrEmpty(query.column))
-        {
-        --- And này là hàm ở trong ExpressionExtensions.cs (Services/Extensions/ExpressionExtensions.cs) ---
-            predicate = predicate.And(c => c.Type.Contains(query.column));
-        }
+            // Chuẩn hóa từ khóa tìm kiếm để dùng nhiều lần trong biểu thức
+            var searchTerm = query.SearchTerm?.ToLower().Trim();
 
-        if (!string.IsNullOrEmpty(query.column))
-        {
-            predicate = predicate.And(c => c.Name.Contains(query.column));
-        }
-        //==============================================================================================
+            // 2. Xây dựng biểu thức điều kiện (Predicate) duy nhất
+            Expression<Func<Account, bool>> predicate = q =>
+                // Nhóm 1: Lọc từ khóa tìm kiếm tương đối (OR)
+                (string.IsNullOrWhiteSpace(searchTerm) ||
+                 q.Username.ToLower().Contains(searchTerm) ||
+                 q.Email.ToLower().Contains(searchTerm) ||
+                 (q.FullName != null && q.FullName.ToLower().Contains(searchTerm)) ||
+                 (q.Phone != null && q.Phone.Contains(searchTerm)))
+                &&
+                // Nhóm 2: Lọc chính xác Text (AND)
+                (string.IsNullOrWhiteSpace(query.Role) || q.Role == query.Role)
+                &&
+                (string.IsNullOrWhiteSpace(query.Status) || q.Status == query.Status)
+                &&
+                // Nhóm 3: Lọc chính xác Boolean (AND)
+                (!query.IsActive.HasValue || q.IsActive == query.IsActive.Value)
+                &&
+                // Nhóm 4: Lọc theo khoảng thời gian (AND)
+                (!query.FromDate.HasValue || q.CreatedAt >= query.FromDate.Value)
+                &&
+                (!query.ToDate.HasValue || q.CreatedAt <= query.ToDate.Value);
 
+            // 3. Khai báo sắp xếp (Mới nhất lên đầu)
             Func<IQueryable<Account>, IOrderedQueryable<Account>> orderBy =
                 q => q.OrderByDescending(x => x.CreatedAt);
 
-            var accounts = await _unitOfWork.AccountRepository.GetPagedAsync(
+            var accounts = await _unitOfWork.GetAccountRepository().GetPagedAsync(
                 pageIndex, pageSize, predicate, orderBy);
 
-            var totalCount = await _unitOfWork.AccountRepository.CountAsync();
+            var totalCount = await _unitOfWork.GetAccountRepository().CountAsync(user => true);
 
             var response = accounts.Adapt<List<AccountResponse>>();
             var pagedResponse = new PagedResponse<AccountResponse>
@@ -173,8 +180,8 @@ namespace GZone.Service.Services
                 PageSize = pageSize
             };
 
-            return ApiResponse<PagedResponse<AccountResponse>>.Success(account);
-        }*/
+            return ApiResponse<PagedResponse<AccountResponse>>.Success(pagedResponse);
+        }
 
         public async Task<ApiResponse<Account>> CreateAccountAsync(RegisterRequest request)
         {

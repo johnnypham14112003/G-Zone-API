@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace GZone.Service.BusinessModels.Request
+namespace GZone.Service.BusinessModels.Request.Account
 {
     public class AccountRequest
     {

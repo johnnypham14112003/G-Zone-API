@@ -1,6 +1,6 @@
 ﻿using Asp.Versioning;
 using GZone.Service.BusinessModels.Generic;
-using GZone.Service.BusinessModels.Request;
+using GZone.Service.BusinessModels.Request.Account;
 using GZone.Service.BusinessModels.Response;
 using GZone.Service.Extensions.Exceptions;
 using GZone.Service.Interfaces;
@@ -62,18 +62,16 @@ public class AccountsController : Controller
         return StatusCode(result.StatusCode, result);
     }
 
-    /*
-    [Authorize]
-    [HttpGet("list")]
+    [Authorize(Roles = "admin")]
+    [HttpGet]
     public async Task<IActionResult> GetListAccount(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
-        [FromQuery] string? search = null)
+        [FromQuery] AccountQuery? input = null)
     {
-        var result = await _service.GetAccountsListAsync(pageNumber, pageSize, search);
+        var result = await _service.GetAccountsListAsync(pageNumber, pageSize, input);
         return StatusCode(result.StatusCode, result);
     }
-     */
 
     // Helper method để lấy ID từ Token
     private Guid GetCurrentUserId()
