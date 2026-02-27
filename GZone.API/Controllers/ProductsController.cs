@@ -1,6 +1,7 @@
 ﻿using Asp.Versioning;
 using GZone.Service.BusinessModels.Generic;
 using GZone.Service.BusinessModels.Request;
+using GZone.Service.BusinessModels.Request.Account;
 using GZone.Service.BusinessModels.Request.Product;
 using GZone.Service.BusinessModels.Response;
 using GZone.Service.BusinessModels.Response.Product;
@@ -40,8 +41,10 @@ namespace GZone.API.Controllers
         }
 
         [Authorize]
-        [HttpPut()]
-        public async Task<ActionResult<ApiResponse<ProductResponse>>> Update([FromBody]Guid id, ProductRequest input)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<ApiResponse<ProductResponse>>> Update(
+        [FromRoute] Guid id,
+        [FromBody] ProductRequest input)
         {
             var result = await _productService.UpdateProductAsync(id, input);
             return StatusCode(result.StatusCode, result);
@@ -49,9 +52,12 @@ namespace GZone.API.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<ProductResponse>>> GetList([FromBody] ProductListRequest input)
+        public async Task<IActionResult> GetProductList(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] ProductQuery? input = null)
         {
-            var result = await _productService.GetProductListAsync(input);
+            var result = await _productService.GetProductListAsync(pageNumber, pageSize, input);
             return StatusCode(result.StatusCode, result);
         }
 

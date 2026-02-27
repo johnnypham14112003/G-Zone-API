@@ -15,7 +15,7 @@ using LinqKit;
 
 namespace GZone.Service.Services
 {
-    public class ProductService //: IProductService
+    public class ProductService : IProductService
     {
         private readonly IUnitOfWork _unitOfWork;
 
@@ -27,12 +27,12 @@ namespace GZone.Service.Services
         public async Task<ApiResponse<PagedResponse<ProductResponse>>> GetProductListAsync(
     int pageIndex,
     int pageSize,
-    ProductListRequest? query)
+    ProductQuery? query)
         {
             if (pageIndex <= 0) pageIndex = 1;
             if (pageSize <= 0) pageSize = 10;
 
-            query ??= new ProductListRequest();
+            query ??= new ProductQuery();
 
             var predicate = PredicateBuilder.New<Product>(true);
 
@@ -50,34 +50,22 @@ namespace GZone.Service.Services
 
             // ===== FILTERS =====
             if (query.CategoryId.HasValue)
-            {
                 predicate = predicate.And(p => p.CategoryId == query.CategoryId.Value);
-            }
 
             if (!string.IsNullOrWhiteSpace(query.Brand))
-            {
                 predicate = predicate.And(p => p.Brand == query.Brand);
-            }
 
             if (query.MinPrice.HasValue)
-            {
                 predicate = predicate.And(p => p.BasePrice >= query.MinPrice.Value);
-            }
 
             if (query.MaxPrice.HasValue)
-            {
                 predicate = predicate.And(p => p.BasePrice <= query.MaxPrice.Value);
-            }
 
             if (query.IsActive.HasValue)
-            {
                 predicate = predicate.And(p => p.IsActive == query.IsActive.Value);
-            }
 
             if (query.IsFeatured.HasValue)
-            {
                 predicate = predicate.And(p => p.IsFeatured == query.IsFeatured.Value);
-            }
 
             // ===== SORTING =====
             Func<IQueryable<Product>, IOrderedQueryable<Product>> orderBy =
@@ -87,7 +75,7 @@ namespace GZone.Service.Services
                     "price_desc" => q => q.OrderByDescending(x => x.BasePrice),
                     "oldest" => q => q.OrderBy(x => x.CreatedAt),
                     "popular" => q => q.OrderByDescending(x => x.ViewCount),
-                    _ => q => q.OrderByDescending(x => x.CreatedAt) // default newest
+                    _ => q => q.OrderByDescending(x => x.CreatedAt)
                 };
 
             var repository = _unitOfWork.GetProductRepository();
@@ -112,6 +100,7 @@ namespace GZone.Service.Services
 
             return ApiResponse<PagedResponse<ProductResponse>>.Success(pagedResponse);
         }
+
 
 
         public async Task<ApiResponse<ProductResponse>> GetProductByIdAsync(Guid id)
