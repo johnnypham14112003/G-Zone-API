@@ -13,6 +13,7 @@ namespace GZone.Repository.Base
         private IDbContextTransaction _transaction;
 
         private readonly Lazy<IAccountRepository> _accountRepository;
+        private readonly Lazy<IProductRepository> _productRepository;
         // Other Repository...
 
         //======================================================================================
@@ -24,6 +25,8 @@ namespace GZone.Repository.Base
             //Lazy (initial when needed)
             _accountRepository = new Lazy<IAccountRepository>
                 (() => new AccountRepository(context));
+            _productRepository = new Lazy<IProductRepository>
+                (() => new ProductRepository(context));
 
             // Other Repository...
         }
@@ -31,6 +34,7 @@ namespace GZone.Repository.Base
         //======================================================================================
         //Methods Expose Repository
         public IAccountRepository GetAccountRepository() => _accountRepository.Value;
+        public IProductRepository GetProductRepository() => _productRepository.Value;
         // Other Repository...
 
         //======================================================================================
