@@ -7,6 +7,7 @@ using GZone.Service.BusinessModels.Response;
 using GZone.Service.Extensions.Exceptions;
 using GZone.Service.Extensions.Utils;
 using GZone.Service.Interfaces;
+using LinqKit;
 using Mapster;
 using Microsoft.IdentityModel.Tokens;
 using System.Linq.Expressions;
@@ -137,30 +138,31 @@ namespace GZone.Service.Services
             // 2. Khởi tạo Query mặc định nếu null
             query ??= new AccountQuery();
 
-            // Chuẩn hóa từ khóa tìm kiếm để dùng nhiều lần trong biểu thức
-            var searchTerm = query.SearchTerm?.ToLower().Trim();
+            // 2. Khởi tạo một Predicate mặc định là True (nghĩa là lấy tất cả nếu không có filter nào)
+            var predicate = PredicateBuilder.New<Account>(true);
 
-            // 2. Xây dựng biểu thức điều kiện (Predicate) duy nhất
-            Expression<Func<Account, bool>> predicate = q =>
-                // Nhóm 1: Lọc từ khóa tìm kiếm tương đối (OR)
-                (string.IsNullOrWhiteSpace(searchTerm) ||
-                 q.Username.ToLower().Contains(searchTerm) ||
-                 q.Email.ToLower().Contains(searchTerm) ||
-                 (q.FullName != null && q.FullName.ToLower().Contains(searchTerm)) ||
-                 (q.Phone != null && q.Phone.Contains(searchTerm)))
-                &&
-                // Nhóm 2: Lọc chính xác Text (AND)
-                (string.IsNullOrWhiteSpace(query.Role) || q.Role == query.Role)
-                &&
-                (string.IsNullOrWhiteSpace(query.Status) || q.Status == query.Status)
-                &&
-                // Nhóm 3: Lọc chính xác Boolean (AND)
-                (!query.IsActive.HasValue || q.IsActive == query.IsActive.Value)
-                &&
-                // Nhóm 4: Lọc theo khoảng thời gian (AND)
-                (!query.FromDate.HasValue || q.CreatedAt >= query.FromDate.Value)
-                &&
-                (!query.ToDate.HasValue || q.CreatedAt <= query.ToDate.Value);
+            // 3. Xây dựng biểu thức điều kiện (Predicate) duy nhất
+            if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+            {
+                var searchTerm = query.SearchTerm.ToLower().Trim();
+
+                // Nối vào predicate bằng hàm .And() của LinqKit
+                predicate = predicate.And(q =>
+                    q.Username.ToLower().Contains(searchTerm) ||
+                    q.Email.ToLower().Contains(searchTerm) ||
+                    (q.FullName != null && q.FullName.ToLower().Contains(searchTerm)) ||
+                    (q.Phone != null && q.Phone.Contains(searchTerm)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(query.Role))
+            {
+                predicate = predicate.And(q => q.Role == query.Role);
+            }
+
+            if (!string.IsNullOrWhiteSpace(query.Status))
+            {
+                predicate = predicate.And(q => q.Status == query.Status);
+            }
 
             // 3. Khai báo sắp xếp (Mới nhất lên đầu)
             Func<IQueryable<Account>, IOrderedQueryable<Account>> orderBy =
