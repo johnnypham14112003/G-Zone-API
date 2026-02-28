@@ -8,7 +8,10 @@ namespace GZone.Repository.Base
         // 1. Methods Expose Repository
         IAccountRepository GetAccountRepository();
         IProductRepository GetProductRepository();
-        // Thêm các repo khác: IProductRepository GetProductRepository();
+        ICategoryRepository GetCategoryRepository();
+        IWarrantyClaimRepository GetWarrantyClaimRepository();
+        INotificationRepository GetNotificationRepository();
+        // Thêm các repo khác:
 
         // 2. Methods Save Changes
         int Complete();
