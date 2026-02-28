@@ -89,6 +89,9 @@ namespace GZone.Service.Services
             var notification = request.Adapt<Notification>();
             notification.NotificationId = Guid.NewGuid();
             notification.CreatedAt = DateTime.Now;
+            notification.OrderId = request.OrderId ?? Guid.Empty;
+            notification.CustomizationId = request.CustomizationId ?? Guid.Empty;
+            notification.WarrantyClaimId = request.WarrantyClaimId ?? Guid.Empty;
 
             try
             {
