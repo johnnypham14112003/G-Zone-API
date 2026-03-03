@@ -8,6 +8,8 @@ namespace GZone.Repository.Base
         // 1. Methods Expose Repository
         IAccountRepository GetAccountRepository();
         IVoucherRepository GetVoucherRepository();
+        IUserVoucherRepository GetUserVoucherRepository();
+        IOrderVoucherRepository GetOrderVoucherRepository();
         // Thêm các repo khác: IProductRepository GetProductRepository();
 
         // 2. Methods Save Changes

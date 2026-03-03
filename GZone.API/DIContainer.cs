@@ -58,6 +58,8 @@ namespace GZone.API
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IImageService, ImageService>();
             services.AddScoped<IVoucherService, VoucherService>();
+            services.AddScoped<IUserVoucherService, UserVoucherService>();
+            services.AddScoped<IOrderVoucherService, OrderVoucherService>();
 
             //Add other BusinessServices here...
 
@@ -71,6 +73,8 @@ namespace GZone.API
             //---------------------------------------------------------------------------
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IVoucherRepository, VoucherRepository>();
+            services.AddScoped<IUserVoucherRepository, UserVoucherRepository>();
+            services.AddScoped<IOrderVoucherRepository, OrderVoucherRepository>();
 
             //Add other repository here...
 

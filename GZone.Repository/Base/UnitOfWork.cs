@@ -14,6 +14,8 @@ namespace GZone.Repository.Base
 
         private readonly Lazy<IAccountRepository> _accountRepository;
         private readonly Lazy<IVoucherRepository> _voucherRepository;
+        private readonly Lazy<IUserVoucherRepository> _userVoucherRepository;
+        private readonly Lazy<IOrderVoucherRepository> _orderVoucherRepository;
         // Other Repository...
 
         //======================================================================================
@@ -27,6 +29,10 @@ namespace GZone.Repository.Base
                 (() => new AccountRepository(context));
             _voucherRepository = new Lazy<IVoucherRepository>
                 (() => new VoucherRepository(context));
+            _userVoucherRepository = new Lazy<IUserVoucherRepository>
+                (() => new UserVoucherRepository(context));
+            _orderVoucherRepository = new Lazy<IOrderVoucherRepository>
+                (() => new OrderVoucherRepository(context));
 
             // Other Repository...
         }
@@ -35,6 +41,8 @@ namespace GZone.Repository.Base
         //Methods Expose Repository
         public IAccountRepository GetAccountRepository() => _accountRepository.Value;
         public IVoucherRepository GetVoucherRepository() => _voucherRepository.Value;
+        public IUserVoucherRepository GetUserVoucherRepository() => _userVoucherRepository.Value;
+        public IOrderVoucherRepository GetOrderVoucherRepository() => _orderVoucherRepository.Value;
         // Other Repository...
 
         //======================================================================================
