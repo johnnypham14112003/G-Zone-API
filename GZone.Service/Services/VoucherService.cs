@@ -3,9 +3,9 @@ using GZone.Repository.Models;
 using GZone.Service.BusinessModels.Generic;
 using GZone.Service.BusinessModels.Request;
 using GZone.Service.BusinessModels.Response;
-using GZone.Service.Extensions;
 using GZone.Service.Extensions.Exceptions;
 using GZone.Service.Interfaces;
+using LinqKit;
 using Mapster;
 using System.Linq.Expressions;
 
