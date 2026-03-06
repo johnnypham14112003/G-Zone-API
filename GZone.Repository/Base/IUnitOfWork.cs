@@ -14,6 +14,10 @@ namespace GZone.Repository.Base
         IWarrantyClaimRepository GetWarrantyClaimRepository();
         INotificationRepository GetNotificationRepository();
         // Thêm các repo khác:
+        IVoucherRepository GetVoucherRepository();
+        IUserVoucherRepository GetUserVoucherRepository();
+        IOrderVoucherRepository GetOrderVoucherRepository();
+        // Thêm các repo khác: IProductRepository GetProductRepository();
 
         // 2. Methods Save Changes
         int Complete();

@@ -19,6 +19,9 @@ namespace GZone.Repository.Base
         private readonly Lazy<ICategoryRepository> _categoryRepository;
         private readonly Lazy<IWarrantyClaimRepository> _warrantyClaimRepository;
         private readonly Lazy<INotificationRepository> _notificationRepository;
+        private readonly Lazy<IVoucherRepository> _voucherRepository;
+        private readonly Lazy<IUserVoucherRepository> _userVoucherRepository;
+        private readonly Lazy<IOrderVoucherRepository> _orderVoucherRepository;
         // Other Repository...
 
         //======================================================================================
@@ -42,6 +45,12 @@ namespace GZone.Repository.Base
                 (() => new WarrantyClaimRepository(context));
             _notificationRepository = new Lazy<INotificationRepository>
                 (() => new NotificationRepository(context));
+            _voucherRepository = new Lazy<IVoucherRepository>
+                (() => new VoucherRepository(context));
+            _userVoucherRepository = new Lazy<IUserVoucherRepository>
+                (() => new UserVoucherRepository(context));
+            _orderVoucherRepository = new Lazy<IOrderVoucherRepository>
+                (() => new OrderVoucherRepository(context));
 
             // Other Repository...
         }
@@ -55,6 +64,9 @@ namespace GZone.Repository.Base
         public ICategoryRepository GetCategoryRepository() => _categoryRepository.Value;
         public IWarrantyClaimRepository GetWarrantyClaimRepository() => _warrantyClaimRepository.Value;
         public INotificationRepository GetNotificationRepository() => _notificationRepository.Value;
+        public IVoucherRepository GetVoucherRepository() => _voucherRepository.Value;
+        public IUserVoucherRepository GetUserVoucherRepository() => _userVoucherRepository.Value;
+        public IOrderVoucherRepository GetOrderVoucherRepository() => _orderVoucherRepository.Value;
         // Other Repository...
 
         //======================================================================================

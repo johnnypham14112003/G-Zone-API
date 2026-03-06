@@ -64,6 +64,9 @@ namespace GZone.API
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IWarrantyClaimService, WarrantyClaimService>();
             services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<IVoucherService, VoucherService>();
+            services.AddScoped<IUserVoucherService, UserVoucherService>();
+            services.AddScoped<IOrderVoucherService, OrderVoucherService>();
 
             //Add other BusinessServices here...
 
@@ -81,6 +84,9 @@ namespace GZone.API
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IWarrantyClaimRepository, WarrantyClaimRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
+            services.AddScoped<IVoucherRepository, VoucherRepository>();
+            services.AddScoped<IUserVoucherRepository, UserVoucherRepository>();
+            services.AddScoped<IOrderVoucherRepository, OrderVoucherRepository>();
 
             //Add other repository here...
 
