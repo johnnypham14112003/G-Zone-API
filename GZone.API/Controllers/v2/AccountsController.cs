@@ -1,7 +1,7 @@
 ﻿using Asp.Versioning;
 using GZone.Service.BusinessModels.Generic;
 using GZone.Service.BusinessModels.Request.Account;
-using GZone.Service.BusinessModels.Response;
+using GZone.Service.BusinessModels.Response.Account;
 using GZone.Service.Extensions.Exceptions;
 using GZone.Service.Interfaces;
 using Microsoft.AspNetCore.Authorization;

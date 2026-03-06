@@ -1,7 +1,7 @@
 ﻿using Asp.Versioning;
 using GZone.Service.BusinessModels.Generic;
 using GZone.Service.BusinessModels.Request.Account;
-using GZone.Service.BusinessModels.Response;
+using GZone.Service.BusinessModels.Response.Account;
 using GZone.Service.Extensions.Exceptions;
 using GZone.Service.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -16,12 +16,12 @@ namespace GZone.API.Controllers;
 public class AccountsController : Controller
 {
     //Dependency Injection
-    private readonly IAccountService _service;
+    private readonly IAccountService _accountService;
 
     //Constructor
-    public AccountsController(IAccountService service)
+    public AccountsController(IAccountService accountService)
     {
-        _service = service;
+        _accountService = accountService;
     }
 
     [Authorize]
@@ -30,7 +30,7 @@ public class AccountsController : Controller
     {
         // Lấy ID từ Token của user đang đăng nhập
         var userId = GetCurrentUserId();
-        var result = await _service.GetAccountProfileAsync(userId);
+        var result = await _accountService.GetAccountProfileAsync(userId);
         return StatusCode(result.StatusCode, result);
     }
 
@@ -38,17 +38,17 @@ public class AccountsController : Controller
     [HttpGet("{id}")]
     public async Task<ActionResult<ApiResponse<AccountResponse>>> GetById(Guid id)
     {
-        var result = await _service.GetAccountProfileAsync(id);
+        var result = await _accountService.GetAccountProfileAsync(id);
         return StatusCode(result.StatusCode, result);
     }
 
     [Authorize]
-    [HttpPut()]
+    [HttpPut]
     public async Task<ActionResult<ApiResponse<AccountResponse>>> Update([FromBody] AccountRequest input)
     {
         var userId = GetCurrentUserId();
         input.Id = userId;
-        var result = await _service.UpdateAccountAsync(input);
+        var result = await _accountService.UpdateAccountAsync(input);
         return StatusCode(result.StatusCode, result);
     }
 
@@ -58,7 +58,7 @@ public class AccountsController : Controller
     public async Task<ActionResult<ApiResponse<bool>>> DeleteAccount(Guid id)
     {
         // Nếu chỉ cho phép admin xóa: Thêm [Authorize(Roles = "Admin")]
-        var result = await _service.DeleteAccountAsync(id);
+        var result = await _accountService.DeleteAccountAsync(id);
         return StatusCode(result.StatusCode, result);
     }
 
@@ -69,7 +69,7 @@ public class AccountsController : Controller
         [FromQuery] int pageSize = 10,
         [FromQuery] AccountQuery? input = null)
     {
-        var result = await _service.GetAccountsListAsync(pageNumber, pageSize, input);
+        var result = await _accountService.GetAccountsListAsync(pageNumber, pageSize, input);
         return StatusCode(result.StatusCode, result);
     }
 
