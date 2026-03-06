@@ -16,6 +16,9 @@ namespace GZone.Repository.Base
         private readonly Lazy<IUserAddressRepository> _userAddressRepository;
         private readonly Lazy<IImageRepository> _imageRepository;
         private readonly Lazy<IProductRepository> _productRepository;
+        private readonly Lazy<ICategoryRepository> _categoryRepository;
+        private readonly Lazy<IWarrantyClaimRepository> _warrantyClaimRepository;
+        private readonly Lazy<INotificationRepository> _notificationRepository;
         // Other Repository...
 
         //======================================================================================
@@ -33,6 +36,12 @@ namespace GZone.Repository.Base
                 (() => new ImageRepository(context));
             _productRepository = new Lazy<IProductRepository>
                 (() => new ProductRepository(context));
+            _categoryRepository = new Lazy<ICategoryRepository>
+                (() => new CategoryRepository(context));
+            _warrantyClaimRepository = new Lazy<IWarrantyClaimRepository>
+                (() => new WarrantyClaimRepository(context));
+            _notificationRepository = new Lazy<INotificationRepository>
+                (() => new NotificationRepository(context));
 
             // Other Repository...
         }
@@ -43,6 +52,9 @@ namespace GZone.Repository.Base
         public IUserAddressRepository GetUserAddressRepository() => _userAddressRepository.Value;
         public IImageRepository GetImageRepository() => _imageRepository.Value;
         public IProductRepository GetProductRepository() => _productRepository.Value;
+        public ICategoryRepository GetCategoryRepository() => _categoryRepository.Value;
+        public IWarrantyClaimRepository GetWarrantyClaimRepository() => _warrantyClaimRepository.Value;
+        public INotificationRepository GetNotificationRepository() => _notificationRepository.Value;
         // Other Repository...
 
         //======================================================================================

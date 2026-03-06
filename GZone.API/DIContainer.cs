@@ -60,6 +60,10 @@ namespace GZone.API
             services.AddScoped<IUserAddressService, UserAddressService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IImageService, ImageService>();
+            services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<IWarrantyClaimService, WarrantyClaimService>();
+            services.AddScoped<INotificationService, NotificationService>();
 
             //Add other BusinessServices here...
 
@@ -74,6 +78,9 @@ namespace GZone.API
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IUserAddressRepository, UserAddressRepository>();
             services.AddScoped<IImageRepository, ImageRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<IWarrantyClaimRepository, WarrantyClaimRepository>();
+            services.AddScoped<INotificationRepository, NotificationRepository>();
 
             //Add other repository here...
 

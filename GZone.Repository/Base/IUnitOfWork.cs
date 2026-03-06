@@ -10,7 +10,10 @@ namespace GZone.Repository.Base
         IUserAddressRepository GetUserAddressRepository();
         IImageRepository GetImageRepository();
         IProductRepository GetProductRepository();
-        // Thêm các repo khác: IProductRepository GetProductRepository();
+        ICategoryRepository GetCategoryRepository();
+        IWarrantyClaimRepository GetWarrantyClaimRepository();
+        INotificationRepository GetNotificationRepository();
+        // Thêm các repo khác:
 
         // 2. Methods Save Changes
         int Complete();
