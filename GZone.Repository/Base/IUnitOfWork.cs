@@ -7,6 +7,8 @@ namespace GZone.Repository.Base
     {
         // 1. Methods Expose Repository
         IAccountRepository GetAccountRepository();
+        IUserAddressRepository GetUserAddressRepository();
+        IImageRepository GetImageRepository();
         IProductRepository GetProductRepository();
         // Thêm các repo khác: IProductRepository GetProductRepository();
 

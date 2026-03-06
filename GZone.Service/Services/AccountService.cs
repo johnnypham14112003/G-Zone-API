@@ -19,11 +19,13 @@ namespace GZone.Service.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ITokenService _tokenService;
+        private readonly IImageService _imageService;
 
-        public AccountService(IUnitOfWork unitOfWork, ITokenService tokenService)
+        public AccountService(IUnitOfWork unitOfWork, ITokenService tokenService, IImageService imageService)
         {
             _unitOfWork = unitOfWork;
             _tokenService = tokenService;
+            _imageService = imageService;
         }
 
         public async Task<ApiResponse<AuthResponse>> LoginByPasswordAsync(AuthRequest authRequest)
