@@ -23,6 +23,9 @@ namespace GZone.Repository.Base
         private readonly Lazy<IUserVoucherRepository> _userVoucherRepository;
         private readonly Lazy<IOrderVoucherRepository> _orderVoucherRepository;
         // Other Repository...
+        private readonly Lazy<IOrderRepository> _orderRepository;
+        private readonly Lazy<IOrderDetailRepository> _orderDetailRepository;
+        private readonly Lazy<IPaymentTransactionRepository> _paymentTransactionRepository;
 
         //======================================================================================
         //Constructor
@@ -53,6 +56,12 @@ namespace GZone.Repository.Base
                 (() => new OrderVoucherRepository(context));
 
             // Other Repository...
+            _orderRepository = new Lazy<IOrderRepository>
+                (() => new OrderRepository(context));
+            _orderDetailRepository = new Lazy<IOrderDetailRepository>
+                (() => new OrderDetailRepository(context));
+            _paymentTransactionRepository = new Lazy<IPaymentTransactionRepository>
+                (() => new PaymentTransactionRepository(context));
         }
 
         //======================================================================================
@@ -68,6 +77,9 @@ namespace GZone.Repository.Base
         public IUserVoucherRepository GetUserVoucherRepository() => _userVoucherRepository.Value;
         public IOrderVoucherRepository GetOrderVoucherRepository() => _orderVoucherRepository.Value;
         // Other Repository...
+        public IOrderRepository GetOrderRepository() => _orderRepository.Value;
+        public IOrderDetailRepository GetOrderDetailRepository() => _orderDetailRepository.Value;
+        public IPaymentTransactionRepository GetPaymentTransactionRepository() => _paymentTransactionRepository.Value;
 
         //======================================================================================
         //Other Methods
