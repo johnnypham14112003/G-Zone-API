@@ -15,6 +15,9 @@ namespace GZone.Repository.Base
         private readonly Lazy<IAccountRepository> _accountRepository;
         private readonly Lazy<IProductRepository> _productRepository;
         // Other Repository...
+        private readonly Lazy<IOrderRepository> _orderRepository;
+        private readonly Lazy<IOrderDetailRepository> _orderDetailRepository;
+        private readonly Lazy<IPaymentTransactionRepository> _paymentTransactionRepository;
 
         //======================================================================================
         //Constructor
@@ -29,6 +32,12 @@ namespace GZone.Repository.Base
                 (() => new ProductRepository(context));
 
             // Other Repository...
+            _orderRepository = new Lazy<IOrderRepository>
+                (() => new OrderRepository(context));
+            _orderDetailRepository = new Lazy<IOrderDetailRepository>
+                (() => new OrderDetailRepository(context));
+            _paymentTransactionRepository = new Lazy<IPaymentTransactionRepository>
+                (() => new PaymentTransactionRepository(context));
         }
 
         //======================================================================================
@@ -36,6 +45,9 @@ namespace GZone.Repository.Base
         public IAccountRepository GetAccountRepository() => _accountRepository.Value;
         public IProductRepository GetProductRepository() => _productRepository.Value;
         // Other Repository...
+        public IOrderRepository GetOrderRepository() => _orderRepository.Value;
+        public IOrderDetailRepository GetOrderDetailRepository() => _orderDetailRepository.Value;
+        public IPaymentTransactionRepository GetPaymentTransactionRepository() => _paymentTransactionRepository.Value;
 
         //======================================================================================
         //Other Methods
