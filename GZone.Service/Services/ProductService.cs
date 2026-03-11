@@ -12,6 +12,7 @@ using GZone.Service.Extensions.Exceptions;
 using Mapster;
 using GZone.Repository.Models;
 using LinqKit;
+using Microsoft.EntityFrameworkCore;
 
 namespace GZone.Service.Services
 {
@@ -25,9 +26,9 @@ namespace GZone.Service.Services
         }
 
         public async Task<ApiResponse<PagedResponse<ProductResponse>>> GetProductListAsync(
-    int pageIndex,
-    int pageSize,
-    ProductQuery? query)
+        int pageIndex,
+        int pageSize,
+        ProductQuery? query)
         {
             if (pageIndex <= 0) pageIndex = 1;
             if (pageSize <= 0) pageSize = 10;
@@ -84,7 +85,8 @@ namespace GZone.Service.Services
                 pageIndex,
                 pageSize,
                 predicate,
-                orderBy);
+                orderBy,
+                p => p.Include(x => x.Category));
 
             var totalCount = await repository.CountAsync(predicate);
 

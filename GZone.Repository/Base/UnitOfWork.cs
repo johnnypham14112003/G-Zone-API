@@ -22,6 +22,7 @@ namespace GZone.Repository.Base
         private readonly Lazy<IVoucherRepository> _voucherRepository;
         private readonly Lazy<IUserVoucherRepository> _userVoucherRepository;
         private readonly Lazy<IOrderVoucherRepository> _orderVoucherRepository;
+        private readonly Lazy<ICustomizationRepository> _customizationRepository;
         // Other Repository...
         private readonly Lazy<IOrderRepository> _orderRepository;
         private readonly Lazy<IOrderDetailRepository> _orderDetailRepository;
@@ -42,6 +43,8 @@ namespace GZone.Repository.Base
                 (() => new ImageRepository(context));
             _productRepository = new Lazy<IProductRepository>
                 (() => new ProductRepository(context));
+            _customizationRepository = new Lazy<ICustomizationRepository>
+                (() => new CustomizationRepository(context));
             _categoryRepository = new Lazy<ICategoryRepository>
                 (() => new CategoryRepository(context));
             _warrantyClaimRepository = new Lazy<IWarrantyClaimRepository>
@@ -70,12 +73,15 @@ namespace GZone.Repository.Base
         public IUserAddressRepository GetUserAddressRepository() => _userAddressRepository.Value;
         public IImageRepository GetImageRepository() => _imageRepository.Value;
         public IProductRepository GetProductRepository() => _productRepository.Value;
+        public ICustomizationRepository GetCustomizationRepository() => _customizationRepository.Value;
         public ICategoryRepository GetCategoryRepository() => _categoryRepository.Value;
         public IWarrantyClaimRepository GetWarrantyClaimRepository() => _warrantyClaimRepository.Value;
         public INotificationRepository GetNotificationRepository() => _notificationRepository.Value;
         public IVoucherRepository GetVoucherRepository() => _voucherRepository.Value;
         public IUserVoucherRepository GetUserVoucherRepository() => _userVoucherRepository.Value;
         public IOrderVoucherRepository GetOrderVoucherRepository() => _orderVoucherRepository.Value;
+        public ICustomizationRepository GetCustomizationRepository() => _customizationRepository.Value;
+>>>>>>>>> Temporary merge branch 2
         // Other Repository...
         public IOrderRepository GetOrderRepository() => _orderRepository.Value;
         public IOrderDetailRepository GetOrderDetailRepository() => _orderDetailRepository.Value;
