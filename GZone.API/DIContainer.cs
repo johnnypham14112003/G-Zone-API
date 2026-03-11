@@ -2,11 +2,14 @@
 using GZone.Repository;
 using GZone.Repository.Base;
 using GZone.Repository.Interfaces;
+using GZone.Repository.Models;
 using GZone.Repository.Repositories;
+using GZone.Service.BusinessModels.Response.Customization;
 using GZone.Service.BusinessModels.StrongTypedModels;
 using GZone.Service.Extensions;
 using GZone.Service.Interfaces;
 using GZone.Service.Services;
+using Mapster;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -109,6 +112,17 @@ namespace GZone.API
             });
 
             services.AddSwaggerGen(c => { c.SchemaFilter<KebabSwaggerSchema>(); });
+            return services;
+        }
+
+        private static IServiceCollection ConfigMapster(this IServiceCollection services)
+        {
+            TypeAdapterConfig<Customization, CustomizationResponse>
+            .NewConfig()
+            .Map(dest => dest.CustomerName, src => src.Customer.FullName)
+            .Map(dest => dest.StaffName, src => src.Staff != null ? src.Staff.FullName : null)
+            .Map(dest => dest.ProductName, src => src.Product.ProductName);
+
             return services;
         }
 
