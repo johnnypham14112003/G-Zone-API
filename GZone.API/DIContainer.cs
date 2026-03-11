@@ -13,6 +13,7 @@ using Mapster;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -31,6 +32,7 @@ namespace GZone.API
             services.InjectRepository();
 
             services.AddJwtAuthentication(configuration);
+            services.ConfigFileProvider();
             services.ConfigCORS();
             services.ConfigKebabCase();
             services.ConfigJsonLoopDeserielize();
@@ -58,8 +60,18 @@ namespace GZone.API
         private static IServiceCollection InjectBusinessServices(this IServiceCollection services)
         {
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IUserAddressService, UserAddressService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IImageService, ImageService>();
+            services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<IWarrantyClaimService, WarrantyClaimService>();
+            services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<IVoucherService, VoucherService>();
+            services.AddScoped<IUserVoucherService, UserVoucherService>();
+            services.AddScoped<IOrderVoucherService, OrderVoucherService>();
+            services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IPaymentTransactionService, PaymentTransactionService>();
 
             //Add other BusinessServices here...
 
@@ -72,8 +84,26 @@ namespace GZone.API
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             //---------------------------------------------------------------------------
             services.AddScoped<IAccountRepository, AccountRepository>();
+            services.AddScoped<IUserAddressRepository, UserAddressRepository>();
+            services.AddScoped<IImageRepository, ImageRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<IWarrantyClaimRepository, WarrantyClaimRepository>();
+            services.AddScoped<INotificationRepository, NotificationRepository>();
+            services.AddScoped<IVoucherRepository, VoucherRepository>();
+            services.AddScoped<IUserVoucherRepository, UserVoucherRepository>();
+            services.AddScoped<IOrderVoucherRepository, OrderVoucherRepository>();
+            services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
+            services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
 
             //Add other repository here...
+
+            return services;
+        }
+
+        private static IServiceCollection ConfigFileProvider(this IServiceCollection services)
+        {
+            services.AddSingleton<IContentTypeProvider, FileExtensionContentTypeProvider>();
 
             return services;
         }

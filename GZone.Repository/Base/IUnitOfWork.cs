@@ -7,9 +7,21 @@ namespace GZone.Repository.Base
     {
         // 1. Methods Expose Repository
         IAccountRepository GetAccountRepository();
+        IUserAddressRepository GetUserAddressRepository();
+        IImageRepository GetImageRepository();
         IProductRepository GetProductRepository();
         ICustomizationRepository GetCustomizationRepository();
+        ICategoryRepository GetCategoryRepository();
+        IWarrantyClaimRepository GetWarrantyClaimRepository();
+        INotificationRepository GetNotificationRepository();
+        // Thêm các repo khác:
+        IVoucherRepository GetVoucherRepository();
+        IUserVoucherRepository GetUserVoucherRepository();
+        IOrderVoucherRepository GetOrderVoucherRepository();
         // Thêm các repo khác: IProductRepository GetProductRepository();
+        IOrderRepository GetOrderRepository();
+        IOrderDetailRepository GetOrderDetailRepository();
+        IPaymentTransactionRepository GetPaymentTransactionRepository();
 
         // 2. Methods Save Changes
         int Complete();

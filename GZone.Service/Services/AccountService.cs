@@ -4,13 +4,13 @@ using GZone.Service.BusinessModels.Generic;
 using GZone.Service.BusinessModels.Request;
 using GZone.Service.BusinessModels.Request.Account;
 using GZone.Service.BusinessModels.Response;
+using GZone.Service.BusinessModels.Response.Account;
 using GZone.Service.Extensions.Exceptions;
 using GZone.Service.Extensions.Utils;
 using GZone.Service.Interfaces;
 using LinqKit;
 using Mapster;
 using Microsoft.IdentityModel.Tokens;
-using System.Linq.Expressions;
 using System.Security.Claims;
 
 namespace GZone.Service.Services
@@ -19,11 +19,13 @@ namespace GZone.Service.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ITokenService _tokenService;
+        private readonly IImageService _imageService;
 
-        public AccountService(IUnitOfWork unitOfWork, ITokenService tokenService)
+        public AccountService(IUnitOfWork unitOfWork, ITokenService tokenService, IImageService imageService)
         {
             _unitOfWork = unitOfWork;
             _tokenService = tokenService;
+            _imageService = imageService;
         }
 
         public async Task<ApiResponse<AuthResponse>> LoginByPasswordAsync(AuthRequest authRequest)
@@ -215,7 +217,6 @@ namespace GZone.Service.Services
                 Email = request.Email,
                 Username = request.UserName, // Giả sử model DB là Name
                 PasswordHash = StringUtils.HashStringSHA256(request.Password),
-                AvatarUrl = request.Avatar,
                 CreatedAt = DateTime.Now,
                 IsActive = true, // Mặc định kích hoạt
                 Role = "Customer",
