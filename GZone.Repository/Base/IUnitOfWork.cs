@@ -10,6 +10,7 @@ namespace GZone.Repository.Base
         IUserAddressRepository GetUserAddressRepository();
         IImageRepository GetImageRepository();
         IProductRepository GetProductRepository();
+        ICustomizationRepository GetCustomizationRepository();
         ICategoryRepository GetCategoryRepository();
         IWarrantyClaimRepository GetWarrantyClaimRepository();
         INotificationRepository GetNotificationRepository();
@@ -18,6 +19,9 @@ namespace GZone.Repository.Base
         IUserVoucherRepository GetUserVoucherRepository();
         IOrderVoucherRepository GetOrderVoucherRepository();
         ICustomizationRepository GetCustomizationRepository();
+>>>>>>>>> Temporary merge branch 2
+        ICustomizationRepository GetCustomizationRepository();
+>>>>>>>>> Temporary merge branch 2
         // Thêm các repo khác: IProductRepository GetProductRepository();
         IOrderRepository GetOrderRepository();
         IOrderDetailRepository GetOrderDetailRepository();
