@@ -131,7 +131,7 @@ namespace GZone.Service.Services
 
             // Find file
             if (!System.IO.File.Exists(physicalFilePath))
-                throw new ArgumentException("Tên file không hợp lệ.");
+                throw new ArgumentException("Không tìm thấy file");
 
             // Get ContentType (MIME type)
             if (!_contentTypeProvider.TryGetContentType(physicalFilePath, out var contentType))

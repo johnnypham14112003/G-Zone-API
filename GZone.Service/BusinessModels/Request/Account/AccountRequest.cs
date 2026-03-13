@@ -23,10 +23,5 @@ namespace GZone.Service.BusinessModels.Request.Account
         // --- CUSTOMER SPECIFIC FIELDS (Nullable) ---
         public DateTime? DateOfBirth { get; set; }
         [MaxLength(30)] public string? Gender { get; set; }
-        //public int? LoyaltyPoints { get; set; } // Null nếu là Staff/Admin
-
-        // --- STAFF SPECIFIC FIELDS (Nullable) ---
-        //public decimal? Salary { get; set; }s
-        //public DateTime? HireDate { get; set; }
     }
 }

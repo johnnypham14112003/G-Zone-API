@@ -10,6 +10,7 @@ using GZone.Service.Extensions.Utils;
 using GZone.Service.Interfaces;
 using LinqKit;
 using Mapster;
+using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 
@@ -122,14 +123,14 @@ namespace GZone.Service.Services
         }
 
         //=================================================================================================
-        public async Task<ApiResponse<Account>> GetAccountProfileAsync(Guid accountId)
+        public async Task<ApiResponse<AccountResponse>> GetAccountProfileAsync(Guid accountId)
         {
             var account = await _unitOfWork.GetAccountRepository().GetByIdAsync(accountId);
 
             if (account == null)
                 throw new NotFoundException("Not found any account match the Id!");
 
-            return ApiResponse<Account>.Success(account);
+            return ApiResponse<AccountResponse>.Success(account.Adapt<AccountResponse>());
         }
 
         public async Task<ApiResponse<PagedResponse<AccountResponse>>> GetAccountsListAsync(int pageIndex, int pageSize, AccountQuery? query)
@@ -228,6 +229,41 @@ namespace GZone.Service.Services
             await _unitOfWork.CompleteAsync();
 
             return ApiResponse<Account>.Success(newAccount, "Create account successfully!");
+        }
+
+        public async Task<ApiResponse<string>> UpdateAvatarAsync(Guid userId, IFormFile file)
+        {
+            // 1. Kiểm tra Account tồn tại
+            var account = await _unitOfWork.GetAccountRepository().GetByIdAsync(userId);
+            if (account is null)
+            {
+                throw new NotFoundException("Not found any account match the Id!");
+            }
+
+            // 2. Tạo tên file ĐỘC NHẤT bằng cách nối UserId với Timestamp (thời gian hiện tại)
+            // Việc này giúp URL luôn mới, Frontend không bị lỗi hiển thị ảnh cũ do cache
+            var uniqueFileName = $"{userId}_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+            var newAvatarPath = await _imageService.SaveImageAsync(file, uniqueFileName, "avatar");
+
+            // 3. Xóa ảnh cũ đi để tiết kiệm dung lượng
+            // CHỈ xóa khi có ảnh cũ VÀ đường dẫn ảnh cũ khác với đường dẫn mới
+            if (!string.IsNullOrWhiteSpace(account.AvatarUrl) && account.AvatarUrl != newAvatarPath)
+            {
+                try
+                {
+                    _imageService.DeleteImage(account.AvatarUrl);
+                }
+                catch
+                {
+                    // Bỏ qua lỗi nếu file vật lý cũ không còn tồn tại trên ổ cứng
+                }
+            }
+
+            // 4. Cập nhật đường dẫn mới vào DB
+            account.AvatarUrl = newAvatarPath;
+            await _unitOfWork.CompleteAsync();
+
+            return ApiResponse<string>.Success(newAvatarPath, "Update avatar successfully!");
         }
 
         public async Task<ApiResponse<bool>> UpdateAccountAsync(AccountRequest request)

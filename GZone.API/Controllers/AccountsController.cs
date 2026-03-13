@@ -43,6 +43,21 @@ public class AccountsController : Controller
     }
 
     [Authorize]
+    [HttpPatch("avatar")]
+    public async Task<ActionResult<ApiResponse<string>>> UpdateAvatar(IFormFile file)
+    {
+        // Kiểm tra file đính kèm
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(new { success = false, message = "No file uploaded." });
+        }
+
+        var userId = GetCurrentUserId(); 
+        var result = await _accountService.UpdateAvatarAsync(userId, file);
+        return Ok(result);
+    }
+
+    [Authorize]
     [HttpPut]
     public async Task<ActionResult<ApiResponse<AccountResponse>>> Update([FromBody] AccountRequest input)
     {
