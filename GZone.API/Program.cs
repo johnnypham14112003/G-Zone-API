@@ -30,6 +30,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors("AllowAll"); // Áp dụng CORS TẠI ĐÂY
+
 app.UseAuthentication();
 app.UseAuthorization();
 

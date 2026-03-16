@@ -33,7 +33,7 @@ namespace GZone.API.Controllers
         }
 
         [Authorize]
-        [HttpPut()]
+        [HttpPost]
         public async Task<ActionResult<ApiResponse<ProductResponse>>> Create ([FromBody] ProductRequest input)
         {
             var result = await _productService.CreateProductAsync(input);
