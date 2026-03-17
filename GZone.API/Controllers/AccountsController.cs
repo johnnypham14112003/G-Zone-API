@@ -88,6 +88,15 @@ public class AccountsController : Controller
         return StatusCode(result.StatusCode, result);
     }
 
+    [Authorize(Roles = "Admin")]
+    [HttpPatch("role")]
+    public async Task<IActionResult> ChangeRole([FromBody] string newRole)
+    {
+        var accountId = GetCurrentUserId();
+        var result = await _accountService.ChangeRoleAsync(accountId, newRole);
+        return StatusCode(result.StatusCode, result);
+    }
+
     // Helper method để lấy ID từ Token
     private Guid GetCurrentUserId()
     {

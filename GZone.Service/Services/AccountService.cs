@@ -124,6 +124,52 @@ namespace GZone.Service.Services
             }
         }
 
+        public async Task<ApiResponse<string>> ChangePasswordAsync(Guid accountId, ChangePasswordRequest request)
+        {
+            if (request.NewPassword != request.ConfirmPassword)
+                throw new BadRequestException("New password and confirm password do not match!");
+
+            var account = await _unitOfWork.GetAccountRepository().GetByIdAsync(accountId);
+            if (account == null)
+                throw new NotFoundException("Account not found!");
+
+            var securedOldPassword = StringUtils.HashStringSHA256(request.OldPassword);
+            if (!securedOldPassword.Equals(account.PasswordHash))
+                throw new BadRequestException("Wrong old password!");
+
+            // Cập nhật mật khẩu mới
+            account.PasswordHash = StringUtils.HashStringSHA256(request.NewPassword);
+
+            // Thu hồi Refresh Token để ép các phiên đăng nhập khác phải thoát ra
+            account.RefreshToken = null;
+            account.RefreshTokenExpiryTime = null;
+
+            await _unitOfWork.CompleteAsync();
+            return ApiResponse<string>.Success("Password changed successfully.");
+        }
+
+        public async Task<ApiResponse<string>> ForgotPasswordAsync(string email)
+        {
+            if (BoolUtils.IsValidEmail(email) == false)
+                throw new BadRequestException("Invalid Email Format!");
+
+            var account = await _unitOfWork.GetAccountRepository().GetOneAsync(
+                acc => acc.Email.ToLower().Equals(email.ToLower()));
+
+            // Quan trọng: Tránh trả về lỗi "Không tìm thấy email" để chống hacker dò quét dữ liệu
+            if (account != null)
+            {
+                // 1. Tạo một mã OTP ngẫu nhiên hoặc Token Reset
+                var otp = StringUtils.GenerateRandomOTP(6);
+
+                // 3. Gọi hàm gửi Email (ví dụ: _emailService.SendEmailAsync(account.Email, resetToken))
+                // await _emailService.SendEmailResetPasswordAsync(account.Email, resetToken);
+            }
+
+            // Luôn trả về thông báo chung chung dù email có tồn tại hay không
+            return ApiResponse<string>.Success("If the email exists in our system, a password reset instruction has been sent.");
+        }
+
         //=================================================================================================
         public async Task<ApiResponse<AccountResponse>> GetAccountProfileAsync(Guid accountId)
         {
@@ -303,6 +349,25 @@ namespace GZone.Service.Services
             await _unitOfWork.CompleteAsync();
 
             return ApiResponse<bool>.Success(true, "Update successfully!");
+        }
+
+        public async Task<ApiResponse<bool>> ChangeRoleAsync(Guid accountId,string newRole)
+        {
+            var targetAccount = await _unitOfWork.GetAccountRepository().GetByIdAsync(accountId);
+
+            if (targetAccount == null)
+                throw new NotFoundException("Account not found!");
+
+            // Cập nhật Role
+            targetAccount.Role = newRole;
+
+            // Bắt buộc thu hồi Refresh Token để lần gọi API tiếp theo user phải đăng nhập lại
+            // nhằm làm mới payload của Access Token (chứa Role mới)
+            targetAccount.RefreshToken = null;
+            targetAccount.RefreshTokenExpiryTime = null;
+
+            await _unitOfWork.CompleteAsync();
+            return ApiResponse<bool>.Success(true);
         }
 
         public async Task<ApiResponse<bool>> DeleteAccountAsync(Guid accountId)

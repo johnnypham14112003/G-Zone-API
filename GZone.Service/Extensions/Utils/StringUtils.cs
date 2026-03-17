@@ -38,5 +38,26 @@ namespace GZone.Service.Extensions.Utils
             // Sử dụng Span để thao tác trên bộ nhớ mà không tạo chuỗi tạm
             return email.AsSpan(0, atIndex).ToString();
         }
+
+        /// <summary>
+        /// Tạo mã OTP ngẫu nhiên an toàn gồm các chữ số.
+        /// </summary>
+        /// <param name="length">Độ dài của mã OTP (mặc định là 6)</param>
+        /// <returns>Chuỗi OTP</returns>
+        public static string GenerateRandomOTP(int length = 6)
+        {
+            if (length <= 0)
+                throw new ArgumentException("OTP length must be greater than 0");
+
+            var otp = new StringBuilder(length);
+
+            for (int i = 0; i < length; i++)
+            {
+                // RandomNumberGenerator.GetInt32(0, 10) trả về số ngẫu nhiên từ 0 đến 9
+                otp.Append(RandomNumberGenerator.GetInt32(0, 10));
+            }
+
+            return otp.ToString();
+        }
     }
 }

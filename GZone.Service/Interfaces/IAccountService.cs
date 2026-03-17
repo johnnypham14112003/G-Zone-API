@@ -12,6 +12,8 @@ namespace GZone.Service.Interfaces
         Task<ApiResponse<AuthResponse>> LoginByPasswordAsync(AuthRequest authRequest);
         Task<ApiResponse<AuthResponse>> RefreshTokenAsync(AuthTokenRequest request);
         Task RevokeRefreshTokenAsync(Guid accountId);
+        Task<ApiResponse<string>> ChangePasswordAsync(Guid accountId, ChangePasswordRequest request);
+        Task<ApiResponse<string>> ForgotPasswordAsync(string email);
 
         //=======================================================================
         Task<ApiResponse<AccountResponse>> GetAccountProfileAsync(Guid accountId);
@@ -19,6 +21,7 @@ namespace GZone.Service.Interfaces
         Task<ApiResponse<AccountResponse>> CreateAccountAsync(RegisterRequest request);
         Task<ApiResponse<string>> UpdateAvatarAsync(Guid userId, IFormFile file);
         Task<ApiResponse<bool>> UpdateAccountAsync(AccountRequest request);
+        Task<ApiResponse<bool>> ChangeRoleAsync(Guid accountId, string newRole);
         Task<ApiResponse<bool>> DeleteAccountAsync(Guid accountId);
     }
 }

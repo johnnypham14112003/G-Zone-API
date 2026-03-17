@@ -40,6 +40,23 @@ namespace GZone.API.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
+        [Authorize]
+        [HttpPatch("password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            var accountId = GetCurrentUserId();
+            var result = await _accountService.ChangePasswordAsync(accountId, request);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        //[AllowAnonymous]
+        //[HttpPost("password")]
+        //public async Task<IActionResult> ForgotPassword([FromBody] string email)
+        //{
+        //    var result = await _accountService.ForgotPasswordAsync(email);
+        //    return StatusCode(result.StatusCode, result);
+        //}
+
         [AllowAnonymous]
         [HttpPost("refresh-token")]
         public async Task<ActionResult<ApiResponse<AuthResponse>>> RefreshToken([FromBody] AuthTokenRequest request)
