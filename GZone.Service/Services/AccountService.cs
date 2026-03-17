@@ -1,8 +1,8 @@
 ﻿using GZone.Repository.Base;
 using GZone.Repository.Models;
 using GZone.Service.BusinessModels.Generic;
-using GZone.Service.BusinessModels.Request;
 using GZone.Service.BusinessModels.Request.Account;
+using GZone.Service.BusinessModels.Request.Auth;
 using GZone.Service.BusinessModels.Response;
 using GZone.Service.BusinessModels.Response.Account;
 using GZone.Service.Extensions.Exceptions;
@@ -11,6 +11,7 @@ using GZone.Service.Interfaces;
 using LinqKit;
 using Mapster;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 
@@ -107,6 +108,7 @@ namespace GZone.Service.Services
                 Email = existAccount.Email,
                 UserName = existAccount.Username,
                 Role = existAccount.Role,
+                AccountId = existAccount.Id
             };
             return ApiResponse<AuthResponse>.Success(authResponse);
         }
@@ -188,7 +190,7 @@ namespace GZone.Service.Services
             return ApiResponse<PagedResponse<AccountResponse>>.Success(pagedResponse);
         }
 
-        public async Task<ApiResponse<Account>> CreateAccountAsync(RegisterRequest request)
+        public async Task<ApiResponse<AccountResponse>> CreateAccountAsync(BusinessModels.Request.Auth.RegisterRequest request)
         {
             // 1. Validate Email format
             if (!BoolUtils.IsValidEmail(request.Email))
@@ -216,7 +218,7 @@ namespace GZone.Service.Services
             {
                 Id = Guid.NewGuid(),
                 Email = request.Email,
-                Username = request.UserName, // Giả sử model DB là Name
+                Username = request.UserName,
                 PasswordHash = StringUtils.HashStringSHA256(request.Password),
                 CreatedAt = DateTime.Now,
                 IsActive = true, // Mặc định kích hoạt
@@ -228,7 +230,7 @@ namespace GZone.Service.Services
             await _unitOfWork.GetAccountRepository().AddAsync(newAccount);
             await _unitOfWork.CompleteAsync();
 
-            return ApiResponse<Account>.Success(newAccount, "Create account successfully!");
+            return ApiResponse<AccountResponse>.Success(newAccount.Adapt<AccountResponse>(), "Create account successfully!");
         }
 
         public async Task<ApiResponse<string>> UpdateAvatarAsync(Guid userId, IFormFile file)

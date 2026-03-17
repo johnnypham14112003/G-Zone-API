@@ -1,7 +1,6 @@
-﻿using GZone.Repository.Models;
-using GZone.Service.BusinessModels.Generic;
-using GZone.Service.BusinessModels.Request;
+﻿using GZone.Service.BusinessModels.Generic;
 using GZone.Service.BusinessModels.Request.Account;
+using GZone.Service.BusinessModels.Request.Auth;
 using GZone.Service.BusinessModels.Response;
 using GZone.Service.BusinessModels.Response.Account;
 using Microsoft.AspNetCore.Http;
@@ -15,10 +14,10 @@ namespace GZone.Service.Interfaces
         Task RevokeRefreshTokenAsync(Guid accountId);
 
         //=======================================================================
-        Task<ApiResponse<string>> UpdateAvatarAsync(Guid userId, IFormFile file);
         Task<ApiResponse<AccountResponse>> GetAccountProfileAsync(Guid accountId);
         Task<ApiResponse<PagedResponse<AccountResponse>>> GetAccountsListAsync(int pageIndex, int pageSize, AccountQuery? query);
-        Task<ApiResponse<Account>> CreateAccountAsync(RegisterRequest request);
+        Task<ApiResponse<AccountResponse>> CreateAccountAsync(RegisterRequest request);
+        Task<ApiResponse<string>> UpdateAvatarAsync(Guid userId, IFormFile file);
         Task<ApiResponse<bool>> UpdateAccountAsync(AccountRequest request);
         Task<ApiResponse<bool>> DeleteAccountAsync(Guid accountId);
     }

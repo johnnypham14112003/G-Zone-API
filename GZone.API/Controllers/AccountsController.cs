@@ -77,7 +77,7 @@ public class AccountsController : Controller
         return StatusCode(result.StatusCode, result);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetListAccount(
         [FromQuery] int pageNumber = 1,
@@ -94,7 +94,7 @@ public class AccountsController : Controller
         var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (idClaim == null || !Guid.TryParse(idClaim, out Guid accountId))
         {
-            throw new UnauthorizedException("Không tìm thấy định danh người dùng hợp lệ.");
+            throw new UnauthorizedException("Invalid Account ID!");
         }
 
         return accountId;

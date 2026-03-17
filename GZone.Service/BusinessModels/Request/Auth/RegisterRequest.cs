@@ -1,4 +1,4 @@
-﻿namespace GZone.Service.BusinessModels.Request
+﻿namespace GZone.Service.BusinessModels.Request.Auth
 {
     public class RegisterRequest
     {

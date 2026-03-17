@@ -69,7 +69,7 @@ public class UserAddressController : Controller
         var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (idClaim == null || !Guid.TryParse(idClaim, out Guid accountId))
         {
-            throw new UnauthorizedException("Không tìm thấy định danh người dùng hợp lệ.");
+            throw new UnauthorizedException("Invalid Account ID!");
         }
 
         return accountId;
