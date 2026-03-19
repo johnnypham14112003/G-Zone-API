@@ -186,18 +186,17 @@ namespace GZone.Service.Services
             if (pageIndex <= 0) pageIndex = 1;
             if (pageSize <= 0) pageSize = 10;
 
-            // 2. Khởi tạo Query mặc định nếu null
+            // 1. Khởi tạo Query mặc định nếu null
             query ??= new AccountQuery();
 
-            // 2. Khởi tạo một Predicate mặc định là True (nghĩa là lấy tất cả nếu không có filter nào)
+            // 2. Khởi tạo một Predicate mặc định là True
             var predicate = PredicateBuilder.New<Account>(true);
 
             // 3. Xây dựng biểu thức điều kiện (Predicate) duy nhất
+
             if (!string.IsNullOrWhiteSpace(query.SearchTerm))
             {
                 var searchTerm = query.SearchTerm.ToLower().Trim();
-
-                // Nối vào predicate bằng hàm .And() của LinqKit
                 predicate = predicate.And(q =>
                     q.Username.ToLower().Contains(searchTerm) ||
                     q.Email.ToLower().Contains(searchTerm) ||
@@ -215,15 +214,35 @@ namespace GZone.Service.Services
                 predicate = predicate.And(q => q.Status == query.Status);
             }
 
-            // 3. Khai báo sắp xếp (Mới nhất lên đầu)
+            // --- CÁC ĐIỀU KIỆN ĐƯỢC BỔ SUNG ---
+
+            // Lọc theo IsActive
+            if (query.IsActive.HasValue)
+                predicate = predicate.And(q => q.IsActive == query.IsActive.Value);
+
+            if (query.FromDate.HasValue)
+                predicate = predicate.And(q => q.CreatedAt >= query.FromDate.Value);
+
+            if (query.ToDate.HasValue)
+            {
+                var toDateLimit = query.ToDate.Value.Date.AddDays(1);
+                predicate = predicate.And(q => q.CreatedAt < toDateLimit);
+            }
+
+            // ---------------------------------
+
+            // 4. Khai báo sắp xếp (Mới nhất lên đầu)
             Func<IQueryable<Account>, IOrderedQueryable<Account>> orderBy =
                 q => q.OrderByDescending(x => x.CreatedAt);
 
+            // 5. Query dữ liệu
             var accounts = await _unitOfWork.GetAccountRepository().GetPagedAsync(
                 pageIndex, pageSize, predicate, orderBy);
 
-            var totalCount = await _unitOfWork.GetAccountRepository().CountAsync(user => true);
+            // [QUAN TRỌNG] Đếm số lượng dữa trên predicate, không phải đếm tất cả
+            var totalCount = await _unitOfWork.GetAccountRepository().CountAsync(predicate);
 
+            // 6. Map dữ liệu trả về
             var response = accounts.Adapt<List<AccountResponse>>();
             var pagedResponse = new PagedResponse<AccountResponse>
             {
@@ -269,7 +288,7 @@ namespace GZone.Service.Services
                 CreatedAt = DateTime.Now,
                 IsActive = true, // Mặc định kích hoạt
                 Role = "Customer",
-                Status = "Active"
+                Status = "Normal"
             };
 
             // 5. Save to DB
