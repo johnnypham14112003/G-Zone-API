@@ -11,7 +11,6 @@ namespace GZone.Service.BusinessModels.Response.Account
         public DateTime? RefreshTokenExpiryTime { get; set; }
         public string? AvatarUrl { get; set; }
         public string Username { get; set; } = null!;
-        public string PasswordHash { get; set; } = null!;
         public string Email { get; set; } = null!;
         [MaxLength(12)] public string? Phone { get; set; } // Số điện thoại chính chủ
         public string? FullName { get; set; }

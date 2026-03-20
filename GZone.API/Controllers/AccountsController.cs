@@ -43,6 +43,21 @@ public class AccountsController : Controller
     }
 
     [Authorize]
+    [HttpPatch("avatar")]
+    public async Task<ActionResult<ApiResponse<string>>> UpdateAvatar(IFormFile file)
+    {
+        // Kiểm tra file đính kèm
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(new { success = false, message = "No file uploaded." });
+        }
+
+        var userId = GetCurrentUserId(); 
+        var result = await _accountService.UpdateAvatarAsync(userId, file);
+        return Ok(result);
+    }
+
+    [Authorize]
     [HttpPut]
     public async Task<ActionResult<ApiResponse<AccountResponse>>> Update([FromBody] AccountRequest input)
     {
@@ -62,7 +77,7 @@ public class AccountsController : Controller
         return StatusCode(result.StatusCode, result);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetListAccount(
         [FromQuery] int pageNumber = 1,
@@ -73,13 +88,22 @@ public class AccountsController : Controller
         return StatusCode(result.StatusCode, result);
     }
 
+    [Authorize(Roles = "Admin")]
+    [HttpPatch("role")]
+    public async Task<IActionResult> ChangeRole([FromBody] string newRole)
+    {
+        var accountId = GetCurrentUserId();
+        var result = await _accountService.ChangeRoleAsync(accountId, newRole);
+        return StatusCode(result.StatusCode, result);
+    }
+
     // Helper method để lấy ID từ Token
     private Guid GetCurrentUserId()
     {
         var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (idClaim == null || !Guid.TryParse(idClaim, out Guid accountId))
         {
-            throw new UnauthorizedException("Không tìm thấy định danh người dùng hợp lệ.");
+            throw new UnauthorizedException("Invalid Account ID!");
         }
 
         return accountId;

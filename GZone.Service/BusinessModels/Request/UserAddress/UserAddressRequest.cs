@@ -13,7 +13,6 @@
         public string Ward { get; set; }
 
         public bool IsDefault { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? UpdatedAt { get; set; }
 
         // Foreign keys

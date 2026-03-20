@@ -1,8 +1,8 @@
 ﻿using GZone.Repository.Base;
 using GZone.Repository.Models;
 using GZone.Service.BusinessModels.Generic;
-using GZone.Service.BusinessModels.Request;
 using GZone.Service.BusinessModels.Request.Account;
+using GZone.Service.BusinessModels.Request.Auth;
 using GZone.Service.BusinessModels.Response;
 using GZone.Service.BusinessModels.Response.Account;
 using GZone.Service.Extensions.Exceptions;
@@ -10,6 +10,8 @@ using GZone.Service.Extensions.Utils;
 using GZone.Service.Interfaces;
 using LinqKit;
 using Mapster;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 
@@ -106,6 +108,7 @@ namespace GZone.Service.Services
                 Email = existAccount.Email,
                 UserName = existAccount.Username,
                 Role = existAccount.Role,
+                AccountId = existAccount.Id
             };
             return ApiResponse<AuthResponse>.Success(authResponse);
         }
@@ -121,15 +124,61 @@ namespace GZone.Service.Services
             }
         }
 
+        public async Task<ApiResponse<string>> ChangePasswordAsync(Guid accountId, ChangePasswordRequest request)
+        {
+            if (request.NewPassword != request.ConfirmPassword)
+                throw new BadRequestException("New password and confirm password do not match!");
+
+            var account = await _unitOfWork.GetAccountRepository().GetByIdAsync(accountId);
+            if (account == null)
+                throw new NotFoundException("Account not found!");
+
+            var securedOldPassword = StringUtils.HashStringSHA256(request.OldPassword);
+            if (!securedOldPassword.Equals(account.PasswordHash))
+                throw new BadRequestException("Wrong old password!");
+
+            // Cập nhật mật khẩu mới
+            account.PasswordHash = StringUtils.HashStringSHA256(request.NewPassword);
+
+            // Thu hồi Refresh Token để ép các phiên đăng nhập khác phải thoát ra
+            account.RefreshToken = null;
+            account.RefreshTokenExpiryTime = null;
+
+            await _unitOfWork.CompleteAsync();
+            return ApiResponse<string>.Success("Password changed successfully.");
+        }
+
+        public async Task<ApiResponse<string>> ForgotPasswordAsync(string email)
+        {
+            if (BoolUtils.IsValidEmail(email) == false)
+                throw new BadRequestException("Invalid Email Format!");
+
+            var account = await _unitOfWork.GetAccountRepository().GetOneAsync(
+                acc => acc.Email.ToLower().Equals(email.ToLower()));
+
+            // Quan trọng: Tránh trả về lỗi "Không tìm thấy email" để chống hacker dò quét dữ liệu
+            if (account != null)
+            {
+                // 1. Tạo một mã OTP ngẫu nhiên hoặc Token Reset
+                var otp = StringUtils.GenerateRandomOTP(6);
+
+                // 3. Gọi hàm gửi Email (ví dụ: _emailService.SendEmailAsync(account.Email, resetToken))
+                // await _emailService.SendEmailResetPasswordAsync(account.Email, resetToken);
+            }
+
+            // Luôn trả về thông báo chung chung dù email có tồn tại hay không
+            return ApiResponse<string>.Success("If the email exists in our system, a password reset instruction has been sent.");
+        }
+
         //=================================================================================================
-        public async Task<ApiResponse<Account>> GetAccountProfileAsync(Guid accountId)
+        public async Task<ApiResponse<AccountResponse>> GetAccountProfileAsync(Guid accountId)
         {
             var account = await _unitOfWork.GetAccountRepository().GetByIdAsync(accountId);
 
             if (account == null)
                 throw new NotFoundException("Not found any account match the Id!");
 
-            return ApiResponse<Account>.Success(account);
+            return ApiResponse<AccountResponse>.Success(account.Adapt<AccountResponse>());
         }
 
         public async Task<ApiResponse<PagedResponse<AccountResponse>>> GetAccountsListAsync(int pageIndex, int pageSize, AccountQuery? query)
@@ -187,7 +236,7 @@ namespace GZone.Service.Services
             return ApiResponse<PagedResponse<AccountResponse>>.Success(pagedResponse);
         }
 
-        public async Task<ApiResponse<Account>> CreateAccountAsync(RegisterRequest request)
+        public async Task<ApiResponse<AccountResponse>> CreateAccountAsync(BusinessModels.Request.Auth.RegisterRequest request)
         {
             // 1. Validate Email format
             if (!BoolUtils.IsValidEmail(request.Email))
@@ -215,7 +264,7 @@ namespace GZone.Service.Services
             {
                 Id = Guid.NewGuid(),
                 Email = request.Email,
-                Username = request.UserName, // Giả sử model DB là Name
+                Username = request.UserName,
                 PasswordHash = StringUtils.HashStringSHA256(request.Password),
                 CreatedAt = DateTime.Now,
                 IsActive = true, // Mặc định kích hoạt
@@ -227,7 +276,42 @@ namespace GZone.Service.Services
             await _unitOfWork.GetAccountRepository().AddAsync(newAccount);
             await _unitOfWork.CompleteAsync();
 
-            return ApiResponse<Account>.Success(newAccount, "Create account successfully!");
+            return ApiResponse<AccountResponse>.Success(newAccount.Adapt<AccountResponse>(), "Create account successfully!");
+        }
+
+        public async Task<ApiResponse<string>> UpdateAvatarAsync(Guid userId, IFormFile file)
+        {
+            // 1. Kiểm tra Account tồn tại
+            var account = await _unitOfWork.GetAccountRepository().GetByIdAsync(userId);
+            if (account is null)
+            {
+                throw new NotFoundException("Not found any account match the Id!");
+            }
+
+            // 2. Tạo tên file ĐỘC NHẤT bằng cách nối UserId với Timestamp (thời gian hiện tại)
+            // Việc này giúp URL luôn mới, Frontend không bị lỗi hiển thị ảnh cũ do cache
+            var uniqueFileName = $"{userId}_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+            var newAvatarPath = await _imageService.SaveImageAsync(file, uniqueFileName, "avatar");
+
+            // 3. Xóa ảnh cũ đi để tiết kiệm dung lượng
+            // CHỈ xóa khi có ảnh cũ VÀ đường dẫn ảnh cũ khác với đường dẫn mới
+            if (!string.IsNullOrWhiteSpace(account.AvatarUrl) && account.AvatarUrl != newAvatarPath)
+            {
+                try
+                {
+                    _imageService.DeleteImage(account.AvatarUrl);
+                }
+                catch
+                {
+                    // Bỏ qua lỗi nếu file vật lý cũ không còn tồn tại trên ổ cứng
+                }
+            }
+
+            // 4. Cập nhật đường dẫn mới vào DB
+            account.AvatarUrl = newAvatarPath;
+            await _unitOfWork.CompleteAsync();
+
+            return ApiResponse<string>.Success(newAvatarPath, "Update avatar successfully!");
         }
 
         public async Task<ApiResponse<bool>> UpdateAccountAsync(AccountRequest request)
@@ -265,6 +349,25 @@ namespace GZone.Service.Services
             await _unitOfWork.CompleteAsync();
 
             return ApiResponse<bool>.Success(true, "Update successfully!");
+        }
+
+        public async Task<ApiResponse<bool>> ChangeRoleAsync(Guid accountId,string newRole)
+        {
+            var targetAccount = await _unitOfWork.GetAccountRepository().GetByIdAsync(accountId);
+
+            if (targetAccount == null)
+                throw new NotFoundException("Account not found!");
+
+            // Cập nhật Role
+            targetAccount.Role = newRole;
+
+            // Bắt buộc thu hồi Refresh Token để lần gọi API tiếp theo user phải đăng nhập lại
+            // nhằm làm mới payload của Access Token (chứa Role mới)
+            targetAccount.RefreshToken = null;
+            targetAccount.RefreshTokenExpiryTime = null;
+
+            await _unitOfWork.CompleteAsync();
+            return ApiResponse<bool>.Success(true);
         }
 
         public async Task<ApiResponse<bool>> DeleteAccountAsync(Guid accountId)
