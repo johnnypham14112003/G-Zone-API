@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GZone.Service.BusinessModels.Request.ProductVariant
+﻿namespace GZone.Service.BusinessModels.Request.ProductVariant
 {
-    internal class ProductVariantCreateRequest
+    public class ProductVariantCreateRequest
     {
+        public string Sku { get; set; }
+        public string Color { get; set; }
+        public string Size { get; set; }
+        public decimal AdditionalPrice { get; set; }
+        public int StockQuantity { get; set; }
+        public decimal Weight { get; set; }
+        public Guid ProductId { get; set; }
     }
 }

@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using GZone.Repository.Base;
+using GZone.Repository.Models;
 
 namespace GZone.Repository.Interfaces
 {
-    internal interface IProductVariantRepository
+    public interface IProductVariantRepository : IGenericRepository<ProductVariant>
     {
     }
 }

@@ -1,12 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using GZone.Service.BusinessModels.Generic;
+using GZone.Service.BusinessModels.Request.ProductVariant;
+using GZone.Service.BusinessModels.Response;
 
 namespace GZone.Service.Interfaces
 {
-    internal interface IProductVariantService
+    public interface IProductVariantService
     {
+        Task<ApiResponse<PagedResponse<ProductVariantResponse>>> GetProductVariantListAsync(
+            int pageIndex,
+            int pageSize,
+            ProductVariantQuery? query);
+
+        Task<ApiResponse<ProductVariantResponse>> GetProductVariantByIdAsync(Guid id);
+
+        Task<ApiResponse<ProductVariantResponse>> CreateProductVariantAsync(
+            ProductVariantCreateRequest request);
+
+        Task<ApiResponse<ProductVariantResponse>> UpdateProductVariantAsync(
+            Guid id,
+            ProductVariantUpdateRequest request);
+
+        Task<ApiResponse<bool>> DeleteProductVariantAsync(Guid id);
     }
 }

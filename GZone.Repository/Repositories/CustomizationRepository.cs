@@ -9,7 +9,7 @@ namespace GZone.Repository.Repositories
     {
         private readonly GZoneDbContext _context;
 
-        public CustomizationRepository(GZoneDbContext context)
+        public CustomizationRepository(GZoneDbContext context) : base(context)
         {
             _context = context;
         }
