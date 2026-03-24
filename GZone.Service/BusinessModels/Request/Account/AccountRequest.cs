@@ -4,11 +4,10 @@ namespace GZone.Service.BusinessModels.Request.Account
 {
     public class AccountRequest
     {
-        public Guid? Id { get; set; }
+        public Guid Id { get; set; }
         public string? Email { get; set; }
         [MaxLength(12)] public string? Phone { get; set; } // Số điện thoại chính chủ
         public string? FullName { get; set; }
-        [MaxLength(30)] public string? Role { get; set; }
         [MaxLength(30)] public string? Status { get; set; }
         public bool IsActive { get; set; }
 

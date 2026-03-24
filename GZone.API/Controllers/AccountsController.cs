@@ -61,8 +61,6 @@ public class AccountsController : Controller
     [HttpPut]
     public async Task<ActionResult<ApiResponse<AccountResponse>>> Update([FromBody] AccountRequest input)
     {
-        var userId = GetCurrentUserId();
-        input.Id = userId;
         var result = await _accountService.UpdateAccountAsync(input);
         return StatusCode(result.StatusCode, result);
     }
@@ -90,10 +88,9 @@ public class AccountsController : Controller
 
     [Authorize(Roles = "Admin")]
     [HttpPatch("role")]
-    public async Task<IActionResult> ChangeRole([FromBody] string newRole)
+    public async Task<IActionResult> ChangeRole([FromBody] AccountRole newAccount)
     {
-        var accountId = GetCurrentUserId();
-        var result = await _accountService.ChangeRoleAsync(accountId, newRole);
+        var result = await _accountService.ChangeRoleAsync(newAccount.Id, newAccount.Role);
         return StatusCode(result.StatusCode, result);
     }
 
