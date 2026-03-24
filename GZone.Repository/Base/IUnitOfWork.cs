@@ -10,6 +10,8 @@ namespace GZone.Repository.Base
         IUserAddressRepository GetUserAddressRepository();
         IImageRepository GetImageRepository();
         IProductRepository GetProductRepository();
+        IProductVariantRepository GetProductVariantRepository();
+        ICustomizationRepository GetCustomizationRepository();
         ICategoryRepository GetCategoryRepository();
         IWarrantyClaimRepository GetWarrantyClaimRepository();
         INotificationRepository GetNotificationRepository();
@@ -17,6 +19,7 @@ namespace GZone.Repository.Base
         IVoucherRepository GetVoucherRepository();
         IUserVoucherRepository GetUserVoucherRepository();
         IOrderVoucherRepository GetOrderVoucherRepository();
+
         // Thêm các repo khác: IProductRepository GetProductRepository();
         IOrderRepository GetOrderRepository();
         IOrderDetailRepository GetOrderDetailRepository();

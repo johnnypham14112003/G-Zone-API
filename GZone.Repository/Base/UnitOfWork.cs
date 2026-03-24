@@ -16,12 +16,14 @@ namespace GZone.Repository.Base
         private readonly Lazy<IUserAddressRepository> _userAddressRepository;
         private readonly Lazy<IImageRepository> _imageRepository;
         private readonly Lazy<IProductRepository> _productRepository;
+        private readonly Lazy<IProductVariantRepository> _productVariantRepository;
         private readonly Lazy<ICategoryRepository> _categoryRepository;
         private readonly Lazy<IWarrantyClaimRepository> _warrantyClaimRepository;
         private readonly Lazy<INotificationRepository> _notificationRepository;
         private readonly Lazy<IVoucherRepository> _voucherRepository;
         private readonly Lazy<IUserVoucherRepository> _userVoucherRepository;
         private readonly Lazy<IOrderVoucherRepository> _orderVoucherRepository;
+        private readonly Lazy<ICustomizationRepository> _customizationRepository;
         // Other Repository...
         private readonly Lazy<IOrderRepository> _orderRepository;
         private readonly Lazy<IOrderDetailRepository> _orderDetailRepository;
@@ -42,6 +44,10 @@ namespace GZone.Repository.Base
                 (() => new ImageRepository(context));
             _productRepository = new Lazy<IProductRepository>
                 (() => new ProductRepository(context));
+            _productVariantRepository = new Lazy<IProductVariantRepository>
+                (() => new ProductVariantRepository(context));
+            _customizationRepository = new Lazy<ICustomizationRepository>
+                (() => new CustomizationRepository(context));
             _categoryRepository = new Lazy<ICategoryRepository>
                 (() => new CategoryRepository(context));
             _warrantyClaimRepository = new Lazy<IWarrantyClaimRepository>
@@ -70,6 +76,8 @@ namespace GZone.Repository.Base
         public IUserAddressRepository GetUserAddressRepository() => _userAddressRepository.Value;
         public IImageRepository GetImageRepository() => _imageRepository.Value;
         public IProductRepository GetProductRepository() => _productRepository.Value;
+        public IProductVariantRepository GetProductVariantRepository() => _productVariantRepository.Value;
+        public ICustomizationRepository GetCustomizationRepository() => _customizationRepository.Value;
         public ICategoryRepository GetCategoryRepository() => _categoryRepository.Value;
         public IWarrantyClaimRepository GetWarrantyClaimRepository() => _warrantyClaimRepository.Value;
         public INotificationRepository GetNotificationRepository() => _notificationRepository.Value;
