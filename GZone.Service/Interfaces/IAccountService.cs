@@ -1,4 +1,5 @@
-﻿using GZone.Service.BusinessModels.Generic;
+﻿using GZone.Repository.Models;
+using GZone.Service.BusinessModels.Generic;
 using GZone.Service.BusinessModels.Request.Account;
 using GZone.Service.BusinessModels.Request.Auth;
 using GZone.Service.BusinessModels.Response;
@@ -13,6 +14,7 @@ namespace GZone.Service.Interfaces
         Task<ApiResponse<AuthResponse>> RefreshTokenAsync(AuthTokenRequest request);
         Task RevokeRefreshTokenAsync(Guid accountId);
         Task<ApiResponse<string>> ChangePasswordAsync(Guid accountId, ChangePasswordRequest request);
+        Task<ApiResponse<string>> ResetPasswordAsync(Account? alreadyQueried, ResetpasswordRequest request);
         Task<ApiResponse<string>> ForgotPasswordAsync(string email);
 
         //=======================================================================

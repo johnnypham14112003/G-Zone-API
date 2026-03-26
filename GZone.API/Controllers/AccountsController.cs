@@ -58,6 +58,15 @@ public class AccountsController : Controller
     }
 
     [Authorize]
+    [HttpPatch("password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var accountId = GetCurrentUserId();
+        var result = await _accountService.ChangePasswordAsync(accountId, request);
+        return StatusCode(result.StatusCode, result);
+    }
+
+    [Authorize]
     [HttpPut]
     public async Task<ActionResult<ApiResponse<AccountResponse>>> Update([FromBody] AccountRequest input)
     {
@@ -66,16 +75,16 @@ public class AccountsController : Controller
     }
 
     // API này dành cho Admin xóa user, hoặc User tự xóa mình
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
-    public async Task<ActionResult<ApiResponse<bool>>> DeleteAccount(Guid id)
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteAccount([FromRoute] Guid id)
     {
         // Nếu chỉ cho phép admin xóa: Thêm [Authorize(Roles = "Admin")]
         var result = await _accountService.DeleteAccountAsync(id);
         return StatusCode(result.StatusCode, result);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin, Staff")]
     [HttpGet]
     public async Task<IActionResult> GetListAccount(
         [FromQuery] int pageNumber = 1,

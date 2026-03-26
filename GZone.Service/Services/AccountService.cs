@@ -126,9 +126,6 @@ namespace GZone.Service.Services
 
         public async Task<ApiResponse<string>> ChangePasswordAsync(Guid accountId, ChangePasswordRequest request)
         {
-            if (request.NewPassword != request.ConfirmPassword)
-                throw new BadRequestException("New password and confirm password do not match!");
-
             var account = await _unitOfWork.GetAccountRepository().GetByIdAsync(accountId);
             if (account == null)
                 throw new NotFoundException("Account not found!");
@@ -146,6 +143,33 @@ namespace GZone.Service.Services
 
             await _unitOfWork.CompleteAsync();
             return ApiResponse<string>.Success("Password changed successfully.");
+        }
+
+        public async Task<ApiResponse<string>> ResetPasswordAsync(Account? alreadyQueried, ResetpasswordRequest request)
+        {
+            var hashedPassword = StringUtils.HashStringSHA256(request.NewPassword);
+            if (alreadyQueried == null)
+            {
+                var account = await _unitOfWork.GetAccountRepository().GetByIdAsync(request.Id);
+                if (account == null)
+                    throw new NotFoundException("Account not found!");
+
+                // Cập nhật mật khẩu mới
+                account.PasswordHash = hashedPassword;
+
+                // Thu hồi Refresh Token để ép các phiên đăng nhập khác phải thoát ra
+                account.RefreshToken = null;
+                account.RefreshTokenExpiryTime = null;
+            }
+            else
+            {
+                alreadyQueried.PasswordHash = hashedPassword;
+                alreadyQueried.RefreshToken = null;
+                alreadyQueried.RefreshTokenExpiryTime = null;
+            }
+
+            await _unitOfWork.CompleteAsync();
+            return ApiResponse<string>.Success("Password reset successfully.");
         }
 
         public async Task<ApiResponse<string>> ForgotPasswordAsync(string email)
@@ -370,7 +394,7 @@ namespace GZone.Service.Services
             return ApiResponse<bool>.Success(true, "Update successfully!");
         }
 
-        public async Task<ApiResponse<bool>> ChangeRoleAsync(Guid accountId,string newRole)
+        public async Task<ApiResponse<bool>> ChangeRoleAsync(Guid accountId, string newRole)
         {
             var targetAccount = await _unitOfWork.GetAccountRepository().GetByIdAsync(accountId);
 

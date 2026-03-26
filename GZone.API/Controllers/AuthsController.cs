@@ -6,7 +6,6 @@ using GZone.Service.BusinessModels.Response.Account;
 using GZone.Service.Extensions.Exceptions;
 using GZone.Service.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -40,12 +39,12 @@ namespace GZone.API.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-        [Authorize]
-        [HttpPatch("password")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+
+        [Authorize(Roles = "Admin, Staff")]
+        [HttpPatch("re-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetpasswordRequest request)
         {
-            var accountId = GetCurrentUserId();
-            var result = await _accountService.ChangePasswordAsync(accountId, request);
+            var result = await _accountService.ResetPasswordAsync(null, request);
             return StatusCode(result.StatusCode, result);
         }
 
