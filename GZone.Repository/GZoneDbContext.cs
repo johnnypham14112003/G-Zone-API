@@ -32,22 +32,22 @@ namespace GZone.Repository
         public DbSet<WarrantyClaim> WarrantyClaims { get; set; }
 
         // --- Config Connection (for reading from appsettings.json) ---
-        //private static string GetConnectionString()
-        //{
-        //    string root = Directory.GetParent(Directory.GetCurrentDirectory())?.FullName ?? "";
-        //    string apiDirectory = Path.Combine(root, "GZone.API");
-        //    IConfiguration configuration = new ConfigurationBuilder()
-        //        .SetBasePath(apiDirectory)
-        //        .AddJsonFile("appsettings.json", true, true).Build();
-        //    return configuration["ConnectionStrings:DefaultConnection"]!;
-        //}
-        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        //{
-        //    if (!optionsBuilder.IsConfigured)
-        //    {
-        //        optionsBuilder.UseSqlServer(GetConnectionString());
-        //    }
-        //}
+        private static string GetConnectionString()
+        {
+            string root = Directory.GetParent(Directory.GetCurrentDirectory())?.FullName ?? "";
+            string apiDirectory = Path.Combine(root, "GZone.API");
+            IConfiguration configuration = new ConfigurationBuilder()
+                .SetBasePath(apiDirectory)
+                .AddJsonFile("appsettings.json", true, true).Build();
+            return configuration["ConnectionStrings:DefaultConnection"]!;
+        }
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseSqlServer(GetConnectionString());
+            }
+        }
 
         //Config Model
         protected override void OnModelCreating(ModelBuilder modelBuilder)

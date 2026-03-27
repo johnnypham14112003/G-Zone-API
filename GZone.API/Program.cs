@@ -1,5 +1,6 @@
 using GZone.API;
 using GZone.API.Middlewares;
+using GZone.Service.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,11 @@ builder.Services.RegisterServices(builder.Configuration);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient<ProductServiceClient>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:5001/");
+});
+
 
 var app = builder.Build();
 

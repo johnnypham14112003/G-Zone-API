@@ -4,6 +4,7 @@ using GZone.Service.BusinessModels.Generic;
 using GZone.Service.BusinessModels.Request.ProductVariant;
 using GZone.Service.BusinessModels.Response;
 using GZone.Service.Interfaces;
+using GZone.Service.Services;
 using LinqKit;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +12,12 @@ using Microsoft.EntityFrameworkCore;
 public class ProductVariantService : IProductVariantService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ProductServiceClient _productClient;
 
-    public ProductVariantService(IUnitOfWork unitOfWork)
+    public ProductVariantService(IUnitOfWork unitOfWork, ProductServiceClient productClient)
     {
         _unitOfWork = unitOfWork;
+        _productClient = productClient;
     }
 
     public async Task<ApiResponse<PagedResponse<ProductVariantResponse>>> GetProductVariantListAsync(
@@ -144,5 +147,18 @@ public class ProductVariantService : IProductVariantService
         await _unitOfWork.CompleteAsync();
 
         return ApiResponse<bool>.Success(true);
+    }
+
+    public async Task<bool> CreateOrder(Guid variantId, int quantity)
+    {
+        var prepared = await _productClient.Prepare(variantId, quantity);
+
+        if (!prepared) return false;
+
+        // save order...
+
+        await _productClient.Commit(variantId, quantity);
+
+        return true;
     }
 }
