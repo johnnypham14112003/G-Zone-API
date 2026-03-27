@@ -721,3 +721,4 @@ FodyWeavers.xsd
 
 .env
 Migrations
+GZone.API/Properties/launchSettings.json
