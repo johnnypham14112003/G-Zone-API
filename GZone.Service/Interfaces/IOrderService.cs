@@ -9,7 +9,7 @@ namespace GZone.Service.Interfaces
         Task<ApiResponse<OrderResponse>> GetOrderByIdAsync(Guid orderId);
         Task<ApiResponse<PagedResponse<OrderResponse>>> GetOrdersListAsync(int pageIndex, int pageSize, OrderQuery? query);
         Task<ApiResponse<OrderResponse>> CreateOrderAsync(Guid customerId, OrderRequest request);
-        Task<ApiResponse<bool>> PatchOrderAsync(Guid orderId, OrderPatchRequest request);
+        Task<ApiResponse<bool>> PatchOrderAsync(Guid orderId, OrderPatchRequest request, Guid actorId, string actorRole);
         Task<ApiResponse<bool>> DeleteOrderAsync(Guid orderId);
 
         // OrderDetail sub-resource

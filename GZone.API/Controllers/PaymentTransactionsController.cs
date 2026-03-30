@@ -32,6 +32,7 @@ public class PaymentTransactionsController : Controller
         return StatusCode(result.StatusCode, result);
     }
 
+
     [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetList(
