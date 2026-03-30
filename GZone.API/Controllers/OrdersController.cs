@@ -32,7 +32,7 @@ public class OrdersController : Controller
         return StatusCode(result.StatusCode, result);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetList(
         [FromQuery] int pageNumber = 1,

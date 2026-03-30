@@ -91,7 +91,11 @@ namespace GZone.Service.Services
             var repository = _unitOfWork.GetOrderRepository();
 
             var orders = await repository.GetPagedAsync(
-                pageIndex, pageSize, predicate, orderBy);
+                pageNumber: pageIndex,
+                pageSize: pageSize,
+                predicate: predicate,
+                orderBy: orderBy,
+                include: q => q.Include(o => o.OrderDetails!));
 
             var totalCount = await repository.CountAsync(predicate);
 

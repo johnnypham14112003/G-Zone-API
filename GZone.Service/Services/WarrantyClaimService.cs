@@ -96,6 +96,7 @@ namespace GZone.Service.Services
                 IssueDescription = request.IssueDescription,
                 ClaimStatus = "Pending",
                 ClaimDate = DateTime.Now,
+                ResolutionNotes = "", // EF Core sets this to NOT NULL in DB, so we must provide an initial empty string value
                 RepairCost = 0,
                 CreatedAt = DateTime.Now,
                 Status = "Active",

@@ -32,7 +32,7 @@ public class PaymentTransactionsController : Controller
         return StatusCode(result.StatusCode, result);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetList(
         [FromQuery] int pageNumber = 1,
@@ -59,7 +59,7 @@ public class PaymentTransactionsController : Controller
         return StatusCode(result.StatusCode, result);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(Guid id)
     {
