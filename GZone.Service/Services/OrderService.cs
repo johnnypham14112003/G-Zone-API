@@ -7,6 +7,7 @@ using GZone.Service.Extensions.Exceptions;
 using GZone.Service.Interfaces;
 using LinqKit;
 using Mapster;
+using DLL.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace GZone.Service.Services
@@ -14,10 +15,12 @@ namespace GZone.Service.Services
     public class OrderService : IOrderService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserNotificationService _notificationService;
 
-        public OrderService(IUnitOfWork unitOfWork)
+        public OrderService(IUnitOfWork unitOfWork, IUserNotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
+            _notificationService = notificationService;
         }
 
         public async Task<ApiResponse<OrderResponse>> GetOrderByIdAsync(Guid orderId)
@@ -252,6 +255,12 @@ namespace GZone.Service.Services
 
             // 3. Save
             await _unitOfWork.CompleteAsync();
+
+            if (!string.IsNullOrWhiteSpace(request.Status))
+            {
+                await _notificationService.SendNotificationAsync(order.CustomerId, "Order Status Updated", $"Your order {order.OrderNumber ?? order.OrderId.ToString()} has been updated to: {request.Status}", "Order");
+            }
+
             return ApiResponse<bool>.Success(true, "Update order successfully!");
         }
 
@@ -304,3 +313,4 @@ namespace GZone.Service.Services
         }
     }
 }
+

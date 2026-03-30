@@ -10,10 +10,45 @@ namespace DLL.Services
     public class UserNotificationService : IUserNotificationService
     {
         private readonly UserNotificationRepository _repo;
+        private readonly GZoneDbContext _context;
 
         public UserNotificationService(GZoneDbContext context)
         {
+            _context = context;
             _repo = new UserNotificationRepository(context);
+        }
+
+        public async Task<ApiResponse<bool>> SendNotificationAsync(Guid accountId, string title, string message, string type = "System")
+        {
+            try
+            {
+                var notification = new Notification
+                {
+                    NotificationId = Guid.NewGuid(),
+                    Title = title,
+                    Message = message,
+                    NotificationType = type,
+                    CreatedAt = DateTime.Now
+                };
+                
+                var userNotification = new UserNotification
+                {
+                    AccountId = accountId,
+                    NotificationId = notification.NotificationId,
+                    IsRead = false,
+                    CreatedAt = DateTime.Now
+                };
+
+                await _context.Notifications.AddAsync(notification);
+                await _context.UserNotifications.AddAsync(userNotification);
+                await _context.SaveChangesAsync();
+
+                return ApiResponse<bool>.Success(true, "Notification sent");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<bool>.Failure($"Error: {ex.Message}", 500);
+            }
         }
 
         public async Task<ApiResponse<List<UserNotificationResponse>>> GetByAccount(Guid accountId)  

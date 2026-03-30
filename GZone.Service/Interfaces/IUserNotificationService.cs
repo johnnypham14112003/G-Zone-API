@@ -9,5 +9,7 @@ namespace DLL.Interfaces
         Task<ApiResponse<List<UserNotificationResponse>>> GetByAccount(Guid accountId);
 
         Task<ApiResponse<bool>> MarkAsRead(Guid accountId, Guid notificationId);
+
+        Task<ApiResponse<bool>> SendNotificationAsync(Guid accountId, string title, string message, string type = "System");
     }
 }

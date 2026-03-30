@@ -7,16 +7,19 @@ using GZone.Service.Extensions.Exceptions;
 using GZone.Service.Interfaces;
 using LinqKit;
 using Mapster;
+using DLL.Interfaces;
 
 namespace GZone.Service.Services
 {
     public class WarrantyClaimService : IWarrantyClaimService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserNotificationService _notificationService;
 
-        public WarrantyClaimService(IUnitOfWork unitOfWork)
+        public WarrantyClaimService(IUnitOfWork unitOfWork, IUserNotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
+            _notificationService = notificationService;
         }
 
         public async Task<ApiResponse<PagedResponse<WarrantyClaimResponse>>> GetWarrantyClaimListAsync(
@@ -108,6 +111,9 @@ namespace GZone.Service.Services
             {
                 await _unitOfWork.GetWarrantyClaimRepository().AddAsync(claim);
                 await _unitOfWork.CompleteAsync();
+
+                await _notificationService.SendNotificationAsync(claim.CustomerId, "Warranty Claim Created", $"Your warranty claim {claim.ClaimNumber} has been successfully submitted and is under review.", "Warranty");
+
                 return ApiResponse<WarrantyClaimResponse>.Success(claim.Adapt<WarrantyClaimResponse>());
             }
             catch (Exception ex) { throw new Exception(ex.Message); }
@@ -144,6 +150,12 @@ namespace GZone.Service.Services
             {
                 await _unitOfWork.GetWarrantyClaimRepository().UpdateAsync(claim);
                 await _unitOfWork.CompleteAsync();
+
+                if (!string.IsNullOrWhiteSpace(request.ClaimStatus))
+                {
+                    await _notificationService.SendNotificationAsync(claim.CustomerId, "Warranty Claim Updated", $"Your warranty claim status has been updated to: {request.ClaimStatus}", "Warranty");
+                }
+
                 return ApiResponse<WarrantyClaimResponse>.Success(claim.Adapt<WarrantyClaimResponse>());
             }
             catch (Exception ex) { throw new Exception(ex.Message); }
@@ -165,3 +177,5 @@ namespace GZone.Service.Services
         }
     }
 }
+
+

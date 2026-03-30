@@ -1,4 +1,4 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 using GZone.Repository;
 using GZone.Repository.Base;
 using GZone.Repository.Interfaces;
@@ -8,6 +8,8 @@ using GZone.Service.BusinessModels.Response.Customization;
 using GZone.Service.BusinessModels.StrongTypedModels;
 using GZone.Service.Extensions;
 using GZone.Service.Interfaces;
+using DLL.Interfaces;
+using DLL.Services;
 using GZone.Service.Services;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -73,6 +75,7 @@ namespace GZone.API
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IWarrantyClaimService, WarrantyClaimService>();
             services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<IUserNotificationService, UserNotificationService>();
             services.AddScoped<IVoucherService, VoucherService>();
             services.AddScoped<IUserVoucherService, UserVoucherService>();
             services.AddScoped<IOrderVoucherService, OrderVoucherService>();
@@ -95,6 +98,7 @@ namespace GZone.API
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IWarrantyClaimRepository, WarrantyClaimRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
+            services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
             services.AddScoped<IVoucherRepository, VoucherRepository>();
             services.AddScoped<IUserVoucherRepository, UserVoucherRepository>();
             services.AddScoped<IOrderVoucherRepository, OrderVoucherRepository>();
@@ -179,15 +183,15 @@ namespace GZone.API
         {
             services.AddApiVersioning(options =>
             {
-                // 1. Trả về các version được hỗ trợ trong response header (api-supported-versions)
+                // 1. Tr? v? c�c version du?c h? tr? trong response header (api-supported-versions)
                 options.ReportApiVersions = true;
 
-                // 2. Nếu client không gửi version, mặc định sẽ dùng version này
+                // 2. N?u client kh�ng g?i version, m?c d?nh s? d�ng version n�y
                 options.AssumeDefaultVersionWhenUnspecified = true;
                 options.DefaultApiVersion = new ApiVersion(1, 0);
 
-                // 3. Đọc version từ đâu? (Mặc định là Query String ?api-version=1.0)
-                // Cấu hình bên dưới cho phép đọc từ cả Query String VÀ Header
+                // 3. �?c version t? d�u? (M?c d?nh l� Query String ?api-version=1.0)
+                // C?u h�nh b�n du?i cho ph�p d?c t? c? Query String V� Header
                 //options.ApiVersionReader = ApiVersionReader.Combine(
                 //    new QueryStringApiVersionReader("api-version"),
                 //    new HeaderApiVersionReader("X-Version")
@@ -195,12 +199,12 @@ namespace GZone.API
             })
             .AddApiExplorer(options =>
             {
-                // Định dạng tên version cho Group (ví dụ: 'v'1, 'v'2)
+                // �?nh d?ng t�n version cho Group (v� d?: 'v'1, 'v'2)
                 options.GroupNameFormat = "'v'VVV";
 
-                // QUAN TRỌNG NHẤT: Thay thế {version} trong URL bằng giá trị thực tế
-                // Ví dụ: api/v{version}/accounts -> api/v1/accounts
-                // Việc này giúp Swagger phân biệt được 2 đường dẫn khác nhau -> Hết lỗi Conflict
+                // QUAN TR?NG NH?T: Thay th? {version} trong URL b?ng gi� tr? th?c t?
+                // V� d?: api/v{version}/accounts -> api/v1/accounts
+                // Vi?c n�y gi�p Swagger ph�n bi?t du?c 2 du?ng d?n kh�c nhau -> H?t l?i Conflict
                 options.SubstituteApiVersionInUrl = true;
             });
             return services;
@@ -217,7 +221,7 @@ namespace GZone.API
                     Version = "v1"
                 });
 
-                // Tạo doc cho V2
+                // T?o doc cho V2
                 c.SwaggerDoc("v2", new OpenApiInfo
                 {
                     Title = "GZone API V2",
@@ -325,3 +329,5 @@ namespace GZone.API
         }
     }
 }
+
+

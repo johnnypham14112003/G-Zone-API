@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using DLL.Interfaces;
 using GZone.Service.BusinessModels.Generic;
 using GZone.Service.BusinessModels.Response.Notification;
@@ -6,8 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GZone.API.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class UserNotificationsController : ControllerBase
     {
         private readonly IUserNotificationService _service;
@@ -17,7 +19,7 @@ namespace GZone.API.Controllers
             _service = service;
         }
 
-        // [Authorize] // B?t n?u dùng Token th?c t?
+        // [Authorize] // B?t n?u d?ng Token th?c t?
         [HttpGet("{accountId}")]
         public async Task<ActionResult<ApiResponse<List<UserNotificationResponse>>>> GetByAccount(Guid accountId)
         {
@@ -32,5 +34,25 @@ namespace GZone.API.Controllers
             var result = await _service.MarkAsRead(accountId, notificationId);
             return StatusCode(result.StatusCode, result);
         }
+
+        [HttpPost("{accountId}")]
+        public async Task<ActionResult<ApiResponse<bool>>> SendNotification(Guid accountId, [FromBody] Models.SendNotificationRequest request)
+        {
+            var result = await _service.SendNotificationAsync(accountId, request.Title, request.Message, request.Type);
+            return StatusCode(result.StatusCode, result);
+        }
+    }
+
+    namespace Models 
+    {
+        public class SendNotificationRequest 
+        {
+            public string Title { get; set; } = string.Empty;
+            public string Message { get; set; } = string.Empty;
+            public string Type { get; set; } = "System";
+        }
     }
 }
+
+
+

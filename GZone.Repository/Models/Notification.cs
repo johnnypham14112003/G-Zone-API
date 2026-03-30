@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace GZone.Repository.Models
 {
@@ -13,9 +13,9 @@ namespace GZone.Repository.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         // Foreign keys
-        public Guid OrderId { get; set; } // ID của đơn hàng, sản phẩm liên quan...
-        public Guid CustomizationId { get; set; } // ID của yêu cầu tùy chỉnh liên quan...
-        public Guid WarrantyClaimId { get; set; } // ID của yêu cầu bảo hành liên quan...
+        public Guid? OrderId { get; set; } // ID c?a don h�ng, s?n ph?m li�n quan...
+        public Guid? CustomizationId { get; set; } // ID c?a y�u c?u t�y ch?nh li�n quan...
+        public Guid? WarrantyClaimId { get; set; } // ID c?a y�u c?u b?o h�nh li�n quan...
 
         // Navigation properties
         public virtual Order? Order { get; set; }
@@ -24,3 +24,5 @@ namespace GZone.Repository.Models
         public virtual ICollection<UserNotification>? UserNotifications { get; set; }
     }
 }
+
+
