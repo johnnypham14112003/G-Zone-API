@@ -1,4 +1,4 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 using GZone.Service.BusinessModels.Generic;
 using GZone.Service.BusinessModels.Request.Customization;
 using GZone.Service.BusinessModels.Response;
@@ -6,6 +6,7 @@ using GZone.Service.BusinessModels.Response.Customization;
 using GZone.Service.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace GZone.API.Controllers;
 
@@ -42,20 +43,27 @@ public class CustomizationController : Controller
 
     [Authorize]
     [HttpPost]
-    public async Task<ActionResult<ApiResponse<CustomizationResponse>>> Create(
+    public async Task<ActionResult<ApiResponse<CustomizationResponse>>> Create( 
         [FromBody] CustomizationCreateRequest request)
     {
+        // Override CustomerId with the one actively authenticated in the JWT token
+        var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (idClaim != null && Guid.TryParse(idClaim, out Guid accountId))
+        {
+            request.CustomerId = accountId;
+        }
+
         var result = await _service.CreateCustomizationAsync(request);
         return StatusCode(result.StatusCode, result);
     }
 
     [Authorize]
     [HttpPut("{id}")]
-    public async Task<ActionResult<ApiResponse<CustomizationResponse>>> Update(
+    public async Task<ActionResult<ApiResponse<CustomizationResponse>>> Update( 
         Guid id,
         [FromBody] CustomizationUpdateRequest request)
     {
-        var result = await _service.UpdateCustomizationAsync(id, request);
+        var result = await _service.UpdateCustomizationAsync(id, request);      
         return StatusCode(result.StatusCode, result);
     }
 

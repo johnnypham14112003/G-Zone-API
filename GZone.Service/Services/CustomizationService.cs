@@ -131,6 +131,12 @@ namespace GZone.Service.Services
         public async Task<ApiResponse<CustomizationResponse>> CreateCustomizationAsync(
         CustomizationCreateRequest request)
         {
+            var customer = await _unitOfWork.GetAccountRepository().GetOneAsync(x => x.Id == request.CustomerId);
+            if (customer == null) throw new NotFoundException("Customer not found.");
+
+            var product = await _unitOfWork.GetProductRepository().GetOneAsync(x => x.ProductId == request.ProductId);
+            if (product == null) throw new NotFoundException("Product not found.");
+
             var repository = _unitOfWork.GetCustomizationRepository();
 
             var customization = request.Adapt<Customization>();
