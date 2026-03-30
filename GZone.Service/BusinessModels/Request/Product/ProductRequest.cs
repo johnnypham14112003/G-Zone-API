@@ -26,6 +26,7 @@ namespace GZone.Service.BusinessModels.Request.Product
         public bool IsActive { get; set; }
         public bool IsFeatured { get; set; }
         public int WarrantyPeriodMonths { get; set; }
+        public string? ImageUrl { get; set; }
 
         // Foreign keys
         public Guid CategoryId { get; set; }
