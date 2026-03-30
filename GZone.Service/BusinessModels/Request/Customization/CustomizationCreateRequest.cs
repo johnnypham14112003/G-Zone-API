@@ -13,7 +13,7 @@ namespace GZone.Service.BusinessModels.Request.Customization
         public string Color { get; set; }
         public string Size { get; set; }
         public decimal Weight { get; set; }
-        public string StaffNote { get; set; }
+        public string StaffNote { get; set; } = "Staff Note is empty";
 
         public Guid CustomerId { get; set; }
         public Guid ProductId { get; set; }

@@ -12,18 +12,18 @@ namespace GZone.Service.Interfaces
     public interface ICustomizationService
     {
         Task<ApiResponse<PagedResponse<CustomizationResponse>>> GetCustomizationListAsync(
-            int pageIndex,
-            int pageSize,
-            CustomizationQuery? query);
+         int pageIndex,
+         int pageSize,
+         CustomizationQuery? query);
 
         Task<ApiResponse<CustomizationResponse>> GetCustomizationByIdAsync(Guid id);
 
         Task<ApiResponse<CustomizationResponse>> CreateCustomizationAsync(
-            CustomizationCreateRequest request);
+        CustomizationCreateRequest request);
 
         Task<ApiResponse<CustomizationResponse>> UpdateCustomizationAsync(
-            Guid id,
-            CustomizationUpdateRequest request);
+        Guid id,
+        CustomizationUpdateRequest request);
 
         Task<ApiResponse<bool>> DeleteCustomizationAsync(Guid id);
     }

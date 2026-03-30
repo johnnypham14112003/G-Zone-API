@@ -10,13 +10,14 @@ using GZone.Service.BusinessModels.Request.Customization;
 using GZone.Service.BusinessModels.Response.Customization;
 using GZone.Service.BusinessModels.Response.Product;
 using GZone.Service.Extensions.Exceptions;
+using GZone.Service.Interfaces;
 using LinqKit;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 
 namespace GZone.Service.Services
 {
-    public class CustomizationService //: ICustomizationService
+    public class CustomizationService : ICustomizationService
     {
         private readonly IUnitOfWork _unitOfWork;
 

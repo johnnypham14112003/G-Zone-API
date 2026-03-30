@@ -12,6 +12,7 @@ namespace GZone.Service.BusinessModels.Response.Customization
         public string Name { get; set; }
         public string Sku { get; set; }
         public string Color { get; set; }
+        public string Weight { get; set; }
         public string Size { get; set; }
         public decimal QuotedPrice { get; set; }
         public string Status { get; set; }
