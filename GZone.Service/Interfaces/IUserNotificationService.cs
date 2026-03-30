@@ -1,11 +1,13 @@
 ﻿using GZone.Repository.Models;
+using GZone.Service.BusinessModels.Generic;
+using GZone.Service.BusinessModels.Response.Notification;
 
 namespace DLL.Interfaces
 {
     public interface IUserNotificationService
     {
-        Task<List<UserNotification>> GetByAccount(Guid accountId);
+        Task<ApiResponse<List<UserNotificationResponse>>> GetByAccount(Guid accountId);
 
-        Task MarkAsRead(UserNotification notification);
+        Task<ApiResponse<bool>> MarkAsRead(Guid accountId, Guid notificationId);
     }
 }
