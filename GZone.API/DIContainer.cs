@@ -72,6 +72,8 @@ namespace GZone.API
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IImageService, ImageService>();
             services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<ICustomizationService, CustomizationService>();
+            services.AddScoped<IProductVariantService, ProductVariantService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IWarrantyClaimService, WarrantyClaimService>();
             services.AddScoped<INotificationService, NotificationService>();
@@ -105,6 +107,9 @@ namespace GZone.API
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
             services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
+            services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
+            services.AddScoped<ICustomizationRepository, CustomizationRepository>();
 
             //Add other repository here...
 
