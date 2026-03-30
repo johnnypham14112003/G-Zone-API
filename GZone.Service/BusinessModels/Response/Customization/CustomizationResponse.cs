@@ -21,6 +21,7 @@ namespace GZone.Service.BusinessModels.Response.Customization
         public Guid ProductId { get; set; }
         public string CustomerName { get; set; }
         public string? StaffName { get; set; }
+        public string StaffNote { get; set; }
         public string ProductName { get; set; }
     }
 

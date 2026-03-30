@@ -11,6 +11,7 @@ using GZone.Service.BusinessModels.Response.Customization;
 using GZone.Service.BusinessModels.Response.Product;
 using GZone.Service.Extensions.Exceptions;
 using GZone.Service.Interfaces;
+using DLL.Interfaces;
 using LinqKit;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
@@ -20,10 +21,12 @@ namespace GZone.Service.Services
     public class CustomizationService : ICustomizationService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserNotificationService _notificationService;
 
-        public CustomizationService(IUnitOfWork unitOfWork)
+        public CustomizationService(IUnitOfWork unitOfWork, IUserNotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
+            _notificationService = notificationService;
         }
 
         public async Task<ApiResponse<CustomizationResponse>> GetCustomizationByIdAsync(Guid id)
@@ -177,10 +180,31 @@ namespace GZone.Service.Services
             if (customization == null)
                 return ApiResponse<CustomizationResponse>.Failure("Customization not found");
 
-            request.Adapt(customization);
+var oldStatus = customization.Status;
+              var oldPrice = customization.QuotedPrice;
 
-            await repository.UpdateAsync(customization);
-            await _unitOfWork.CompleteAsync();
+              request.Adapt(customization);
+
+              await repository.UpdateAsync(customization);
+              await _unitOfWork.CompleteAsync();
+
+              // Send Notification if price or status changed
+              if (oldStatus != request.Status || oldPrice != request.QuotedPrice)
+              {
+                  var title = "Cập nhật yêu cầu thiết kế";
+                  var msg = $"Yêu cầu Custom '{customization.Name}' của bạn đã được Admin cập nhật.";
+                  if (request.QuotedPrice > 0 && oldPrice != request.QuotedPrice)
+                  {
+                      msg = $"Yêu cầu Custom '{customization.Name}' đã được báo giá: {request.QuotedPrice:C}. Vui lòng kiểm tra và thanh toán.";
+                      title = "Báo giá thiết kế mới";
+                  }
+                  else if (request.Status == "Completed" || request.Status == "Rejected")
+                  {
+                      msg = $"Yêu cầu Custom '{customization.Name}' của bạn đã được chuyển sang trạng thái: {request.Status}.";
+                  }
+                  
+                  await _notificationService.SendNotificationAsync(customization.CustomerId, title, msg, "System");
+              }
 
             var response = customization.Adapt<CustomizationResponse>();
 
