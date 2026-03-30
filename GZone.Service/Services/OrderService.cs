@@ -138,7 +138,7 @@ namespace GZone.Service.Services
                 OrderNumber = GenerateOrderNumber(),
                 CustomerId = customerId,
                 WholeSale = request.WholeSale,
-                Status = "Pending",
+                Status = "Processing",
                 PaymentMethod = request.PaymentMethod,
                 PaymentStatus = "Unpaid",
                 ShippingAddress = request.ShippingAddress,
@@ -206,22 +206,43 @@ namespace GZone.Service.Services
             return ApiResponse<OrderResponse>.Success(response, "Create order successfully!");
         }
 
-        public async Task<ApiResponse<bool>> PatchOrderAsync(Guid orderId, OrderPatchRequest request)
+        public async Task<ApiResponse<bool>> PatchOrderAsync(Guid orderId, OrderPatchRequest request, Guid actorId, string actorRole)
         {
+            if (request == null)
+                throw new BadRequestException("Invalid patch request.");
+
+            var isPrivileged = IsPrivilegedRole(actorRole);
+
             // 1. Check exist
             var order = await _unitOfWork.GetOrderRepository().GetByIdAsync(orderId);
             if (order == null)
                 throw new NotFoundException("Not found any order match the Id!");
 
+            if (!isPrivileged && order.CustomerId != actorId)
+            {
+                throw new UnauthorizedException("You can only update your own orders.");
+            }
+
+            if (!isPrivileged && (
+                !string.IsNullOrWhiteSpace(request.PaymentStatus) ||
+                !string.IsNullOrWhiteSpace(request.TrackingNumber) ||
+                request.EstimatedDelivery.HasValue ||
+                request.ManagedByStaffId.HasValue))
+            {
+                throw new BadRequestException("Only admin or staff can update payment/shipping metadata.");
+            }
+
             // 2. Patch only provided fields
             if (!string.IsNullOrWhiteSpace(request.Status))
             {
-                order.Status = request.Status;
+                var normalizedStatus = NormalizeStatus(request.Status);
+                ValidateStatusTransition(order, normalizedStatus, isPrivileged, actorId);
+                order.Status = normalizedStatus;
 
                 // Auto-set timestamps based on status
-                if (request.Status == "Cancelled")
+                if (normalizedStatus == "Cancelled")
                     order.CancelledAt = DateTime.Now;
-                else if (request.Status == "Delivered")
+                else if (normalizedStatus == "Delivered")
                     order.DeliveredAt = DateTime.Now;
             }
 
@@ -297,6 +318,73 @@ namespace GZone.Service.Services
         private static string GenerateOrderNumber()
         {
             return $"ORD-{DateTime.Now:yyyyMMddHHmmss}-{Guid.NewGuid().ToString()[..4].ToUpper()}";
+        }
+
+        private static bool IsPrivilegedRole(string role)
+        {
+            return role.Equals("Admin", StringComparison.OrdinalIgnoreCase)
+                || role.Equals("Staff", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string NormalizeStatus(string status)
+        {
+            var raw = status.Trim();
+            return raw.ToLowerInvariant() switch
+            {
+                "pending" => "Processing",
+                "processing" => "Processing",
+                "shipping" => "Shipping",
+                "delivered" => "Delivered",
+                "cancelled" => "Cancelled",
+                _ => throw new BadRequestException($"Unsupported status '{status}'.")
+            };
+        }
+
+        private static void ValidateStatusTransition(Order order, string targetStatus, bool isPrivileged, Guid actorId)
+        {
+            var currentStatus = NormalizeStatus(order.Status);
+            var isOwner = order.CustomerId == actorId;
+
+            if (currentStatus == targetStatus)
+            {
+                return;
+            }
+
+            if (targetStatus == "Shipping")
+            {
+                if (!isPrivileged)
+                    throw new BadRequestException("Only admin/staff can confirm orders for shipping.");
+                if (currentStatus != "Processing")
+                    throw new BadRequestException("Order can only move to Shipping from Processing.");
+                return;
+            }
+
+            if (targetStatus == "Delivered")
+            {
+                if (!isOwner)
+                    throw new BadRequestException("Only the customer who owns the order can confirm delivery.");
+                if (currentStatus != "Shipping")
+                    throw new BadRequestException("Order can only move to Delivered from Shipping.");
+                return;
+            }
+
+            if (targetStatus == "Cancelled")
+            {
+                if (isPrivileged)
+                {
+                    if (currentStatus is "Delivered" or "Cancelled")
+                        throw new BadRequestException("Delivered/Cancelled orders cannot be cancelled.");
+                    return;
+                }
+
+                if (!isOwner)
+                    throw new BadRequestException("Only the customer who owns the order can cancel it.");
+                if (currentStatus != "Processing")
+                    throw new BadRequestException("Customer can cancel only Processing orders.");
+                return;
+            }
+
+            throw new BadRequestException($"Transition from {currentStatus} to {targetStatus} is not allowed.");
         }
     }
 }

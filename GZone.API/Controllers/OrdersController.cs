@@ -15,10 +15,8 @@ namespace GZone.API.Controllers;
 [Route("api/v{version:apiVersion}/[controller]")]
 public class OrdersController : Controller
 {
-    //Dependency Injection
     private readonly IOrderService _service;
 
-    //Constructor
     public OrdersController(IOrderService service)
     {
         _service = service;
@@ -32,7 +30,7 @@ public class OrdersController : Controller
         return StatusCode(result.StatusCode, result);
     }
 
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetList(
         [FromQuery] int pageNumber = 1,
@@ -70,7 +68,9 @@ public class OrdersController : Controller
     [HttpPatch("{id}")]
     public async Task<ActionResult<ApiResponse<bool>>> Patch(Guid id, [FromBody] OrderPatchRequest input)
     {
-        var result = await _service.PatchOrderAsync(id, input);
+        var userId = GetCurrentUserId();
+        var userRole = GetCurrentUserRole();
+        var result = await _service.PatchOrderAsync(id, input, userId, userRole);
         return StatusCode(result.StatusCode, result);
     }
 
@@ -82,8 +82,6 @@ public class OrdersController : Controller
         return StatusCode(result.StatusCode, result);
     }
 
-    // ===== OrderDetail sub-resource =====
-
     [Authorize]
     [HttpGet("{orderId}/details")]
     public async Task<ActionResult<ApiResponse<List<OrderDetailResponse>>>> GetOrderDetails(Guid orderId)
@@ -92,22 +90,25 @@ public class OrdersController : Controller
         return StatusCode(result.StatusCode, result);
     }
 
-    [Authorize]
-    [HttpGet("details/{orderDetailId}")]
-    public async Task<ActionResult<ApiResponse<OrderDetailResponse>>> GetOrderDetailById(Guid orderDetailId)
-    {
-        var result = await _service.GetOrderDetailByIdAsync(orderDetailId);
-        return StatusCode(result.StatusCode, result);
-    }
-
-    // Helper method để lấy ID từ Token
     private Guid GetCurrentUserId()
     {
         var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (idClaim == null || !Guid.TryParse(idClaim, out Guid accountId))
         {
-            throw new UnauthorizedException("Không tìm thấy định danh người dùng hợp lệ.");
+            throw new UnauthorizedException("Cannot resolve current user id from token.");
         }
+
         return accountId;
+    }
+
+    private string GetCurrentUserRole()
+    {
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        if (string.IsNullOrWhiteSpace(role))
+        {
+            throw new UnauthorizedException("Cannot resolve current user role from token.");
+        }
+
+        return role;
     }
 }
