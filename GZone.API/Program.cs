@@ -1,5 +1,7 @@
 using GZone.API;
 using GZone.API.Middlewares;
+using GZone.Repository;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +15,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<GZoneDbContext>();
+    dbContext.Database.Migrate();
+}
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
@@ -28,7 +36,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 //After UseRouting, Before UseAuthorization
 app.UseCors("AllowAll");

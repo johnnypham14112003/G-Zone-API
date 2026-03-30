@@ -49,7 +49,13 @@ namespace GZone.API
         //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         private static IServiceCollection InjectDbContext(this IServiceCollection services, IConfiguration configuration)
         {
-            var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+            var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+                ?? configuration.GetConnectionString("DefaultConnection");
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException("Database connection string is missing. Set DB_CONNECTION_STRING or ConnectionStrings:DefaultConnection.");
+            }
 
             services.AddDbContext<GZoneDbContext>(options => options.UseSqlServer(connectionString));
 
@@ -116,7 +122,11 @@ namespace GZone.API
                 {
                     builder.WithOrigins(
                         "http://localhost:5173",
+                        "https://localhost:5173",
                         "http://localhost:3000",
+                        "https://localhost:3000",
+                        "http://localhost:3001",
+                        "https://localhost:3001",
                         "https://fe.vercel.app",
                         "https://asp-deep-badly.ngrok-free.app"
                     )
@@ -253,13 +263,28 @@ namespace GZone.API
         {
             var jwtOps = new JwtSettings
             {
-                // Priority: appsettings.json > Environment Variables
-                Key = Environment.GetEnvironmentVariable("Jwt_Key") ?? string.Empty,
-                Issuer = Environment.GetEnvironmentVariable("Jwt_Issuer") ?? string.Empty,
-                Audience = Environment.GetEnvironmentVariable("Jwt_Audience") ?? string.Empty,
-                AccessTokenExpirationMinutes = int.TryParse(Environment.GetEnvironmentVariable("Jwt_AccessTokenExpirationMinutes"), out var m) ? m : 15,
-                RefreshTokenExpirationDays = int.TryParse(Environment.GetEnvironmentVariable("Jwt_RefreshTokenExpirationDays"), out var d) ? d : 7
+                // Priority: environment variables > appsettings > defaults.
+                Key = Environment.GetEnvironmentVariable("Jwt_Key")
+                    ?? configuration["Jwt:Key"]
+                    ?? string.Empty,
+                Issuer = Environment.GetEnvironmentVariable("Jwt_Issuer")
+                    ?? configuration["Jwt:Issuer"]
+                    ?? string.Empty,
+                Audience = Environment.GetEnvironmentVariable("Jwt_Audience")
+                    ?? configuration["Jwt:Audience"]
+                    ?? string.Empty,
+                AccessTokenExpirationMinutes = int.TryParse(Environment.GetEnvironmentVariable("Jwt_AccessTokenExpirationMinutes"), out var m)
+                    ? m
+                    : int.TryParse(configuration["Jwt:AccessTokenExpirationMinutes"], out var cm) ? cm : 15,
+                RefreshTokenExpirationDays = int.TryParse(Environment.GetEnvironmentVariable("Jwt_RefreshTokenExpirationDays"), out var d)
+                    ? d
+                    : int.TryParse(configuration["Jwt:RefreshTokenExpirationDays"], out var cd) ? cd : 7
             };
+
+            if (string.IsNullOrWhiteSpace(jwtOps.Key) || string.IsNullOrWhiteSpace(jwtOps.Issuer) || string.IsNullOrWhiteSpace(jwtOps.Audience))
+            {
+                throw new InvalidOperationException("JWT settings are missing. Set Jwt_Key/Jwt_Issuer/Jwt_Audience or Jwt section in appsettings.");
+            }
 
             // Register JwtSettings as a singleton
             services.AddSingleton(jwtOps);
